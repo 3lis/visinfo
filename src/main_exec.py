@@ -1,116 +1,91 @@
 """
 #####################################################################################################################
 
-main file for interacting with OpenAI models
+Main file to execute the program
 
-execute
-    python main_exec.py -h
-for the usage help
-
+For help
+    $ python main_exec.py -h
 
 #####################################################################################################################
 """
 
 import  os
 import  sys
-import  re
 import  shutil
 import  platform
 import  time
-import  datetime
 import  pickle
 import  numpy       as np
 
-import  load_cnfg                               # module for setting all program parameters
-import  prompt                                  # module for composing prompts
-import  complete                                # module for getting completions
+import  load_cnfg                               # this module sets program parameters
+import  prompt                                  # this module composes the prompts
+import  complete                                # this module perform LLM completions
 
+# this module lists the available LLMs
 from    models      import models, models_endpoint, models_interface
-
-frmt_response           = "%y-%m-%d_%H-%M-%S"   # datetime format for response filenames
-now_time                = None                  # the global current datetime
-
-
-# declare a possible role for the system in case of chat complete models
-system_role             = "you are a human subject responding to a psychological questionnaire"
-
-
-dir_res                 = '../res'              # results directory
-dir_json                = '../data'             # data in json format directory
-
-# NOTE the following variables will be validated in init_dirs()
-dir_current             = None
-dir_src                 = 'src'
-dir_data                = 'data'
-dir_test                = 'test'
-log_runs                = 'runs.log'
-log_err                 = "err.log"
-log_msg                 = "msg.log"
-dump_file               = 'results.pickle'
-
-cnfg                    = None                  # configuration object
 
 # execution directives
 DO_NOTHING              = False                 # for debugging
 DEBUG                   = False                 # temporary specific debugging
-diagnostic              = True                  # print diagnostic messages
+
+frmt_response           = "%y-%m-%d_%H-%M-%S"   # datetime format for filenames
+now_time                = None                  # the global current datetime
+dir_res                 = '../res'              # folder of results
+dir_json                = '../data'             # folder of json data
+
+cnfg                    = None                  # object containing the execution configuration (see load_cnfg.py)
+
+# globals pointing to current execution folders and files
+# NOTE they will be validated in init_dirs()
+exec_dir                = None
+exec_src                = 'src'
+exec_data               = 'data'
+exec_log                = 'run.log'
+exec_file               = 'res.pkl'
+
 
 
 # ===================================================================================================================
 #
-#   Basic utilities
+#   Utilities
+#   - init_dirs
+#   - init_cnfg
+#   - archive
+#   - ls_models
 #
 # ===================================================================================================================
-
 
 def init_dirs():
-    """ -------------------------------------------------------------------------------------------------------------
-    Set paths to directories where to save the execution
-    ------------------------------------------------------------------------------------------------------------- """
-    global dir_current, dir_src, dir_data, dir_test             # dirs
-    global log_runs, log_err, log_msg, dump_file                # files
+    """
+    Set paths and create directories where to save the current execution
+    """
+    global exec_dir, exec_src, exec_data        # dirs
+    global exec_log, exec_file                  # files
 
-    dir_current     = os.path.join( dir_res, now_time )
-    while os.path.isdir( dir_current ):
+    exec_dir     = os.path.join( dir_res, now_time )
+    while os.path.isdir( exec_dir ):
         if cnfg.VERBOSE:
-            print( f"Warning: {dir_current} already existing, creating with one more second" )
-        sec         = int( dir_current[ -2 : ] )
+            print( f"WARNING: a folder with the timestamp {exec_dir} already exists." )
+            print( "Creating a folder with a timestamp a second ahead.\n" )
+        sec         = int( exec_dir[ -2: ] )
         sec         += 1
-        dir_current = f"{dir_current[ : -2 ]}{sec:02d}"
-    dir_src         = os.path.join( dir_current, dir_src )
-    dir_data        = os.path.join( dir_current, dir_data )
-    dir_test        = os.path.join( dir_current, dir_test )
+        exec_dir    = f"{exec_dir[ :-2 ]}{sec:02d}"
 
-    os.makedirs( dir_current )
-    os.makedirs( dir_src )
-    os.makedirs( dir_data )
+    exec_src        = os.path.join( exec_dir, exec_src )
+    exec_data       = os.path.join( exec_dir, exec_data )
 
-    log_runs        = os.path.join( dir_current, log_runs )
-    log_err         = os.path.join( dir_current, log_err )
-    log_msg         = os.path.join( dir_current, log_msg )
-    dump_file       = os.path.join( dir_current, dump_file )
-
-
-def archive():
-    """ -------------------------------------------------------------------------------------------------------------
-    Archive python and json sources
-    ------------------------------------------------------------------------------------------------------------- """
-    pfiles  = [ "main_exec.py", "prompt.py", "load_cnfg.py", "models.py", "complete.py" ]
-    if cnfg.CONFIG is not None:
-        pfiles.append( cnfg.CONFIG + ".py" )
-    jfiles  = ( "dialogs.json", "news.json" )
-    for pfile in pfiles:
-        shutil.copy( pfile, dir_src )
-    for jfile in jfiles:
-        jfile   = os.path.join( dir_json, jfile )
-        shutil.copy( jfile, dir_data )
+    os.makedirs( exec_dir )
+    os.makedirs( exec_src )
+    os.makedirs( exec_data )
+    exec_log        = os.path.join( exec_dir, exec_log )
+    exec_file       = os.path.join( exec_dir, exec_file )
 
 
 def init_cnfg():
-    """ -------------------------------------------------------------------------------------------------------------
-    Set global parameters from command line and python configuration file
-    Execute this function before init_dirs()
-    ------------------------------------------------------------------------------------------------------------- """
+    """
+    Set execution parameters received from command line and python configuration file
+    NOTE Execute this function before init_dirs()
+    """
     global cnfg
     global now_time
 
@@ -118,15 +93,15 @@ def init_cnfg():
 
     # load parameters from command line
     line_kwargs     = load_cnfg.read_args()                 # read the arguments in the command line
-    cnfg.load_from_line( line_kwargs )                      # and parse their value into the configuration
+    cnfg.load_from_line( line_kwargs )                      # and parse their value into the configuration obj
 
-
-    # load parameters from file
+    # load parameters from configuration file
     if cnfg.CONFIG is not None:
         exec( "import " + cnfg.CONFIG )                     # exec the import statement
         file_kwargs     = eval( cnfg.CONFIG + ".kwargs" )   # assign the content to a variable
-        cnfg.load_from_file( file_kwargs )                  # read the configuration file,
-    else:                                                   # set defaults
+        cnfg.load_from_file( file_kwargs )                  # read the configuration file
+
+    else:                                                   # default configuration
         cnfg.model_id       = 0                             # use the defaul model
         cnfg.n_returns      = 1                             # just one response
         cnfg.max_tokens     = 50                            # afew tokens
@@ -136,17 +111,14 @@ def init_cnfg():
         cnfg.news_numbers   = []                            # set a reasonable default
 
     if not hasattr( cnfg, 'experiment' ):
-        cnfg.experiment         = None
+        cnfg.experiment         = None                      # whether experiment uses images or not
 
     # overwrite command line arguments
-    if cnfg.DIALOG is not None:
-        cnfg.dialogs    = cnfg.DIALOG
-    if cnfg.MAXTOKENS is not None:
-        cnfg.max_tokens = cnfg.MAXTOKENS
-    if cnfg.MODEL is not None:
-        cnfg.model_id   = cnfg.MODEL
-    if cnfg.NRETURNS is not None:
-        cnfg.n_returns  = cnfg.NRETURNS
+    if cnfg.DIALOG is not None:         cnfg.dialogs    = cnfg.DIALOG
+    if cnfg.MAXTOKENS is not None:      cnfg.max_tokens = cnfg.MAXTOKENS
+    if cnfg.MODEL is not None:          cnfg.model_id   = cnfg.MODEL
+    if cnfg.NRETURNS is not None:       cnfg.n_returns  = cnfg.NRETURNS
+
     # if a model is used, from its index derive the complete model name and usage mode
     if hasattr( cnfg, 'model_id' ):
         assert cnfg.model_id < len( models ), f"error: model # {cnfg.model_id} not available"
@@ -157,12 +129,54 @@ def init_cnfg():
     now_time        = time.strftime( frmt_response )    # string used for composing file names of results
 
     # export information from config
-    if hasattr( cnfg, 'f_dialog' ):
-        prompt.f_dialog  = cnfg.f_dialog
-    if hasattr( cnfg, 'detail' ):
-        prompt.detail   = cnfg.detail
+    if hasattr( cnfg, 'f_dialog' ):     prompt.f_dialog  = cnfg.f_dialog
+    if hasattr( cnfg, 'detail' ):       prompt.detail   = cnfg.detail
 
+    # pass the configuration object to module complete.py
     complete.cnfg       = cnfg
+
+
+def archive():
+    """
+    Save a copy of current python source and json data files in the execution folder
+    """
+    jfiles  = ( "dialogs.json",
+                "news.json" )
+
+    pfiles  = [ "main_exec.py",
+                "prompt.py",
+                "load_cnfg.py",
+                "models.py",
+                "complete.py" ]
+
+    if cnfg.CONFIG is not None:
+        pfiles.append( cnfg.CONFIG + ".py" )
+
+    for pfile in pfiles:
+        shutil.copy( pfile, exec_src )
+    for jfile in jfiles:
+        jfile   = os.path.join( dir_json, jfile )
+        shutil.copy( jfile, exec_data )
+
+
+def ls_models():
+    """
+    List the available language models
+    """
+    global client
+    if client is None:                      # check if openai has already a client, otherwise set it
+        client  = set_key()
+    res     = client.models.list().data
+    if cnfg.VERBOSE:
+        print( "\n\nlist of all available models:" )
+        for m in res:
+            print( m.id )
+    return res
+
+
+# ===================================================================================================================
+# ===================================================================================================================
+# ===================================================================================================================
 
 
 def check_news( completion ):
@@ -225,9 +239,9 @@ def do_news( with_img=True ):
         prompts.append( pr )
         completions.append( completion )
         img_names.append( name )
-        
+
     return prompts, completions, scores, img_names
-        
+
 
 def print_header( fstream ):
     """
@@ -307,7 +321,7 @@ def print_news( fstream, prompts, completions, results, img_names ):
                 all_res_img.append( yi )
                 all_res_noi.append( yn )
                 fstream.write( f"{k:>3}\t\t{yi:4.2f}\t\t{yn:4.2f}\n" )
-            
+
         all_res_img     = np.array( all_res_img )
         mean_img        = all_res_img.mean()
         std_img         = all_res_img.std()
@@ -336,7 +350,7 @@ def print_news( fstream, prompts, completions, results, img_names ):
                 all_n   += n
                 all_res.append( r )
                 fstream.write( f"{k:>3}\t\t{r:4.2f}\n" )
-            
+
         all_res         = np.array( all_res )
         mean            = all_res.mean()
         std             = all_res.std()
@@ -363,7 +377,7 @@ def exec_completions():
     account for various execution mode of the program (only CRA at the moment...)
     """
     global          true_words
-    fstream         = open( log_runs, 'w', encoding="utf-8" )   # open the file for reporting completions
+    fstream         = open( exec_log, 'w', encoding="utf-8" )   # open the file for reporting completions
     print_header( fstream )
 
     match cnfg.experiment:
@@ -371,7 +385,7 @@ def exec_completions():
         case "news_noimage":
             pr, compl, res, names   = do_news( with_img=False )
             print_news( fstream, pr, compl, res, names )
-            with open( dump_file, 'wb' ) as f:
+            with open( exec_file, 'wb' ) as f:
                 pickle.dump( ( res ), f ) # save the results and the word counts
 
         case "news_image":
@@ -379,7 +393,7 @@ def exec_completions():
             print_news( fstream, pr, compl, res, names )
             prompts, completions, results   = do_news( with_img=True )
             print_news( fstream, prompts, completions, results )
-            with open( dump_file, 'wb' ) as f:
+            with open( exec_file, 'wb' ) as f:
                 pickle.dump( ( res ), f ) # save the results and the word counts
 
         case "both":
@@ -390,7 +404,7 @@ def exec_completions():
             names                           = n_i + n_n
             results                         = { "with_img": res_img, "no_img": res_noi }
             print_news( fstream, prompts, completions, results, names )
-            with open( dump_file, 'wb' ) as f:
+            with open( exec_file, 'wb' ) as f:
                 pickle.dump( ( results ), f ) # save the results and the word counts
 
         case _:
@@ -402,20 +416,6 @@ def exec_completions():
 
     return True
 
-
-def ls_models():
-    """
-    list current models
-    """
-    global client
-    if client is None:                      # check if openai has already a client, otherwise set it
-        client  = set_key()
-    res     = client.models.list().data
-    if cnfg.VERBOSE:
-        print( "\n\nlist of all available models:" )
-        for m in res:
-            print( m.id )
-    return res
 
 
 # ===================================================================================================================
@@ -429,6 +429,7 @@ if __name__ == '__main__':
 
     if DO_NOTHING:
         print( "Program instructed to DO_NOTHING" )
+
     else:
         init_cnfg()
         if cnfg.LIST:                       # list current available models
