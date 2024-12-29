@@ -104,7 +104,7 @@ def init_cnfg():
         cnfg.n_returns      = 1                             # just one response
         cnfg.max_tokens     = 50                            # afew tokens
         cnfg.top_p          = 1                             # set a reasonable default
-        cnfg.temperature    = 0.8                           # set a reasonable default
+        cnfg.temperature    = 0.3                           # set a reasonable default
         cnfg.dialogs        = []                            # set a reasonable default
         cnfg.news_numbers   = []                            # set a reasonable default
 

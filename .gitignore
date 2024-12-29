@@ -4,7 +4,7 @@
 /imgs
 data/.hf.txt
 data/.key.txt
-src/cfg_*.py
+src/cfg_[0-9]*.py
 .DS_Store
 *.py~
 *.tgz

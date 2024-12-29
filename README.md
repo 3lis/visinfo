@@ -17,10 +17,10 @@
     ├── main_exec.py
     ├── models.py
     ├── prompt.py
-    └── cfg_##.py (any config file)
+    └── cfg_###.py (any config file)
 ```
 
 To run the program, navigate to the `src` directory and execute a command like the following:
 ```
-$ python main_exec.py -c cfg_01
+$ python main_exec.py -c cfg_example
 ```
