@@ -197,6 +197,7 @@ def do_news( with_img=True ):
     completions     = []        # initialize the list of completions
     prompts         = []        # initialize the list of prompts
     scores          = dict()    # initialize the yes/not responses
+    img_names       = []        # initialize the list of image names
     pre             = ""        # optional preliminary dialog turn
     post            = ""        # optional post dialog turn, typically a query
 
@@ -209,7 +210,7 @@ def do_news( with_img=True ):
         if cnfg.VERBOSE:
             i_mode      = "with image" if with_img  else "without image"
             print( f"processing news {n} {i_mode}" )
-        pr              = prompt.news_prompt( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
+        pr, name        = prompt.news_prompt( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
         if cnfg.interface == "openai":
             completion  = complete.complete( pr )
             pr          = prompt.prune_news_prompt( pr )
@@ -223,8 +224,9 @@ def do_news( with_img=True ):
         scores[ n ]     = res
         prompts.append( pr )
         completions.append( completion )
+        img_names.append( name )
         
-    return prompts, completions, scores
+    return prompts, completions, scores, img_names
         
 
 def print_header( fstream ):
@@ -266,7 +268,7 @@ def print_content( fstream, prompt, completions ):
 
 
 
-def print_news( fstream, prompts, completions, results ):
+def print_news( fstream, prompts, completions, results, img_names ):
     """
     print results of ToM analysis on file, divided in two parts: first the task number/accuracy,
     then the log of the entire dialogs
@@ -276,6 +278,7 @@ def print_news( fstream, prompts, completions, results ):
         prompt      [list] of prompts
         completions [list] of completions
         results     [dict] of scores per news
+        img_names   [list] of image names
     """
 
     if cnfg.experiment == "both":
@@ -342,8 +345,15 @@ def print_news( fstream, prompts, completions, results ):
 
     fstream.write( 60 * "=" + "\n\n\n" )
     fstream.write( "\n\n========== complete dialogs =======================\n\n" )
-    for prompt, completion in zip( prompts, completions ):
-        print_content( fstream, prompt, completion )
+    news_list   = cnfg.news_numbers
+    if cnfg.experiment == "both":
+        news_list   += cnfg.news_numbers
+    for i, pr, compl, name in zip( news_list, prompts, completions, img_names ):
+        if len( name ):
+            fstream.write( f"\n---------- news {i:3d} with image {name} -------------\n\n" )
+        else:
+            fstream.write( f"\n---------- news {i:3d} without image     -------------\n\n" )
+        print_content( fstream, pr, compl )
         fstream.write( 60 * "=" + "\n" )
 
 
@@ -359,24 +369,27 @@ def exec_completions():
     match cnfg.experiment:
 
         case "news_noimage":
-            prompts, completions, results   = do_news( with_img=False )
-            print_news( fstream, prompts, completions, results )
+            pr, compl, res, names   = do_news( with_img=False )
+            print_news( fstream, pr, compl, res, names )
             with open( dump_file, 'wb' ) as f:
-                pickle.dump( ( results ), f ) # save the results and the word counts
+                pickle.dump( ( res ), f ) # save the results and the word counts
 
         case "news_image":
+            pr, compl, res, names   = do_news( with_img=True )
+            print_news( fstream, pr, compl, res, names )
             prompts, completions, results   = do_news( with_img=True )
             print_news( fstream, prompts, completions, results )
             with open( dump_file, 'wb' ) as f:
-                pickle.dump( ( results ), f ) # save the results and the word counts
+                pickle.dump( ( res ), f ) # save the results and the word counts
 
         case "both":
-            pr_img, com_img, res_img        = do_news( with_img=True )
-            pr_noi, com_noi, res_noi        = do_news( with_img=False )
+            pr_img, com_img, res_img, n_i   = do_news( with_img=True )
+            pr_noi, com_noi, res_noi, n_n   = do_news( with_img=False )
             prompts                         = pr_img + pr_noi
             completions                     = com_img + com_noi
+            names                           = n_i + n_n
             results                         = { "with_img": res_img, "no_img": res_noi }
-            print_news( fstream, prompts, completions, results )
+            print_news( fstream, prompts, completions, results, names )
             with open( dump_file, 'wb' ) as f:
                 pickle.dump( ( results ), f ) # save the results and the word counts
 

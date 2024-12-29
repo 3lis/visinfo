@@ -11,7 +11,6 @@ import  sys
 import  string
 import  base64
 import  json
-from    io          import BytesIO
 from    PIL         import Image
 
 
@@ -35,7 +34,7 @@ def jpg_image( i ):
 
     i           [int] number of the news
 
-    return:     [PIL.JpegImagePlugin.JpegImageFile]
+    return:     [tuple] ( [PIL.JpegImagePlugin.JpegImageFile], image_name )
     """
     fname       = os.path.join( data_dir, f_news )
     with open( fname, 'r' ) as f: data = json.load( f )
@@ -45,11 +44,11 @@ def jpg_image( i ):
     except Exception as e:
         print( f"non existing news with ID {i} in jpg_image()" )
         raise e
-    fname       = data[ idx ][ "image" ]
-    fname       = os.path.join( img_dir, fname + ".jpg" )
+    img_name    = data[ idx ][ "image" ]
+    fname       = os.path.join( img_dir, img_name )
     img         = Image.open( fname )
 
-    return img
+    return img, img_name
 
 
 def one_image( fname ):
@@ -61,7 +60,7 @@ def one_image( fname ):
 
     return:     [bytes] the b64encoded image
     """
-    fname       = os.path.join( img_dir, fname + ".jpg" )
+    fname       = os.path.join( img_dir, fname )
     with open( fname, 'rb' ) as f:
         img_str     = base64.b64encode( f.read() ).decode( "utf-8" )
 
@@ -148,7 +147,7 @@ def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
     interface   [str] "openai" or "hf"
     with_img    [bool] combine the news with the image
 
-    return:     [tuple] ( [list] the prompt )
+    return:     [tuple] ( [list] the prompt, [str] image name, empty string if not with_img )
     """
 
     fname           = os.path.join( data_dir, f_news )
@@ -165,27 +164,37 @@ def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
     fimage              = news[ "image" ]
     text                = pre + text + post
 
-    if interface == "openai":   # OpenAI includes the image as string in the prompt
-        image               = one_image( fimage )
-        img_content         = {
-                "type": "image_url",
-                "image_url" : {
-                    "url":      f"data:image/jpeg;base64,{image}",
-                    "detail":   detail
+    if with_img:                    # include directive for processing the image
+        if interface == "openai":   # OpenAI includes the image as string in the prompt
+            image               = one_image( fimage )
+            img_content         = {
+                    "type": "image_url",
+                    "image_url" : {
+                        "url":      f"data:image/jpeg;base64,{image}",
+                        "detail":   detail
+                    }
                 }
-            }
-    else:                       # huggingface do not include the image in the prompt
-        img_content         = { "type": "image" }
+        else:                       # huggingface do not include the image in the prompt
+            img_content         = { "type": "image" }
+        prompt      = [ {
+            "role":     "user",
+            "content":  [
+            {
+                "type": "text",
+                "text": text
+            },
+            img_content
+            ]
+        } ]
+        return prompt, fimage
 
-    prompt      = [ {
+    prompt      = [ {           # no image processing directive
         "role":     "user",
         "content":  [
         {
             "type": "text",
             "text": text
-        },
-        img_content
+        }
         ]
     } ]
-
-    return prompt
+    return prompt, ''

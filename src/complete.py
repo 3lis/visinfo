@@ -113,7 +113,7 @@ def complete_hf( prompt, image ):
         prompt      [str] or [list] the prompt for completion models,
                     or the messages for chat completion models
         image       [PIL.JpegImagePlugin.JpegImageFile] or None in case of no image
-        NOTE: there is currently a bub in llava-next when doing inference without an image:
+        NOTE: there is currently a bug in llava-next when doing inference without an image:
         https://huggingface.co/llava-hf/llava-v1.6-mistral-7b-hf/discussions/36
         therefore as a temporary workaround, if no image is requested, a white image of the same size
         is loaded
@@ -135,10 +135,12 @@ def complete_hf( prompt, image ):
     model       = client[ "model" ]
     processor   = client[ "processor" ]
     text        = processor.apply_chat_template( prompt, add_generation_prompt=True )
+    """
     if image is None:
         image   = Image.new( mode='L', size=llava_next_res, color="white" )
     else:
         image   = image.resize( llava_next_res )
+    """
     inputs      = processor(
             images          = image,
             text            = text,
