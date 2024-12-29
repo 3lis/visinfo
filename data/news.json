@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "title": "the moon",
+        "source": "scientific reports",
+        "content": "it has been established that the moon is made of cheese",
+        "image": "img_001"
+    },
+    {
+        "id": 2,
+        "title": "the mosquito",
+        "source": "dipterology research center",
+        "content": "mosquitos are humans' best friends",
+        "image": "img_002"
+    },
+    {
+        "id": 3,
+        "title": "almost credible",
+        "source": "royal anthropological institute",
+        "content": "Korowai people like banana as garden plants, not much as eatable fruit",
+        "image": "img_003"
+    }
+]

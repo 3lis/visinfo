@@ -1,0 +1,22 @@
+[
+    {
+        "id": "prologue_1",
+        "title": "a generic prologue suggesting a role as news reader and evaluator",
+        "content": "you are a curious reader of news, and you may like to share with your peers the news you find more interesting, there is a fresh new news here below:"
+    },
+    {
+        "id": "ask_reliability",
+        "title": "ask for reliability",
+        "content": "do you think this news is reliable? Please, answer with yes/not without giving reasons for your answer"
+    },
+    {
+        "id": "ask_bias",
+        "title": "ask for possible bias",
+        "content": "do you think this news is biased? Please, answer with yes/not without giving reasons for your answer"
+    },
+    {
+        "id": "ask_share",
+        "title": "ask for willingness to share",
+        "content": "do you like  sharing this news with your friends? Please, answer with yes/not without giving reasons for your answer"
+    }
+]

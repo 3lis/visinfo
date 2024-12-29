@@ -1,0 +1,10 @@
+
+/src/__pycache__
+/res
+/imgs
+data/.hf.txt
+data/.key.txt
+src/cfg_*.py
+.DS_Store
+*.py~
+*.tgz
