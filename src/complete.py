@@ -1,7 +1,7 @@
 """
 #####################################################################################################################
 
-    completions
+Module to handle model completions
 
 #####################################################################################################################
 """
@@ -177,7 +177,7 @@ def complete( prompt, image=None ):
     match cnfg.interface:
         case 'openai':
             return complete_openai( prompt )
-        case 'hf':     
+        case 'hf':
             # in this case there is the problem of GPU memory, if necessary more completions are issued
             if cnfg.n_returns <= llava_next_n_max:
                 return complete_hf( prompt, image=image )

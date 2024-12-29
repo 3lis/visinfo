@@ -1,17 +1,18 @@
 """
+#####################################################################################################################
 
-    alex Apr 2024
+Module to set configuration parameters
 
-    Configuration class, checking all the parameters used in the software
-
+#####################################################################################################################
 """
+
 
 import  os
 from    argparse        import ArgumentParser
 
 
 class Config( object ):
-    """ -------------------------------------------------------------------------------------------------------------
+    """
     LIST of all PARAMETERS accepted by the software - several parameters can be given in the configuration file
     as well as with command line flags
 
@@ -32,7 +33,7 @@ class Config( object ):
     top_p                   [int] probability mass of tokens generated in completion (default=1)
     temperature             [float] sampling temperature during completion (default=1.0)
     news_numbers            [list] numbers of newss to process
-    ------------------------------------------------------------------------------------------------------------- """
+    """
 
     def load_from_line( self, line_kwargs ):
         """ ---------------------------------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ class Config( object ):
 def read_args():
     """ -------------------------------------------------------------------------------------------------------------
     Parse the command-line arguments defined by flags
-    
+
     return:         [dict] key = name of parameter, value = value of parameter
     ------------------------------------------------------------------------------------------------------------- """
     parser      = ArgumentParser()
