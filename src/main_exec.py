@@ -18,8 +18,8 @@ import  pickle
 import  numpy       as np
 
 import  load_cnfg                               # this module sets program parameters
-import  prompt                                  # this module composes the prompts
-import  complete                                # this module perform LLM completions
+import  prompt      as prmpt                    # this module composes the prompts
+import  complete    as cmplt                    # this module performs LLM completions
 
 # this module lists the available LLMs
 from    models      import models, models_endpoint, models_interface
@@ -44,14 +44,12 @@ exec_log                = 'run.log'
 exec_file               = 'res.pkl'
 
 
-
 # ===================================================================================================================
 #
-#   Utilities
+#   Utilities to set up execution
 #   - init_dirs
 #   - init_cnfg
 #   - archive
-#   - ls_models
 #
 # ===================================================================================================================
 
@@ -129,11 +127,11 @@ def init_cnfg():
     now_time        = time.strftime( frmt_response )    # string used for composing file names of results
 
     # export information from config
-    if hasattr( cnfg, 'f_dialog' ):     prompt.f_dialog  = cnfg.f_dialog
-    if hasattr( cnfg, 'detail' ):       prompt.detail   = cnfg.detail
+    if hasattr( cnfg, 'f_dialog' ):     prmpt.f_dialog  = cnfg.f_dialog
+    if hasattr( cnfg, 'detail' ):       prmpt.detail   = cnfg.detail
 
-    # pass the configuration object to module complete.py
-    complete.cnfg       = cnfg
+    # pass the configuration object to module cmplt.py
+    cmplt.cnfg       = cnfg
 
 
 def archive():
@@ -144,10 +142,10 @@ def archive():
                 "news.json" )
 
     pfiles  = [ "main_exec.py",
-                "prompt.py",
+                "prmpt.py",
                 "load_cnfg.py",
                 "models.py",
-                "complete.py" ]
+                "cmplt.py" ]
 
     if cnfg.CONFIG is not None:
         pfiles.append( cnfg.CONFIG + ".py" )
@@ -159,150 +157,74 @@ def archive():
         shutil.copy( jfile, exec_data )
 
 
-def ls_models():
-    """
-    List the available language models
-    """
-    global client
-    if client is None:                      # check if openai has already a client, otherwise set it
-        client  = set_key()
-    res     = client.models.list().data
-    if cnfg.VERBOSE:
-        print( "\n\nlist of all available models:" )
-        for m in res:
-            print( m.id )
-    return res
-
 
 # ===================================================================================================================
+#
+#   Functions to write the results on file
+#   - write_header
+#   - write_content
+#   - write_results
+#
 # ===================================================================================================================
-# ===================================================================================================================
 
-
-def check_news( completion ):
+def write_header( fstream ):
     """
-    check if the model completions in response to questions about a news are positive
-    input:
+    Write the initial part of the log file with info about the execution command and parameters
 
-    completion: [list] with completion text
-
-    return:     [np.array] of booleans
+    params:
+        fstream     [TextIOWrapper] text stream of the output file
     """
-
-    nc      = len( completion )
-    res     = np.full( nc,  False )
-    for i, c in enumerate( completion ):
-        c   = c.lower()
-        if "yes" in c:
-            res[ i ]    = True
-
-    return res
-
-
-def do_news( with_img=True ):
-    """
-    arrange for preparing prompts and getting completions for news
-
-    return:     [tuple] of:
-                        prompts     [list] of all prompt conversations
-                        completions [list] the list of completions
-                        scores      [list] of the yes/not answers
-    """
-    completions     = []        # initialize the list of completions
-    prompts         = []        # initialize the list of prompts
-    scores          = dict()    # initialize the yes/not responses
-    img_names       = []        # initialize the list of image names
-    pre             = ""        # optional preliminary dialog turn
-    post            = ""        # optional post dialog turn, typically a query
-
-    if len( cnfg.dialogs ):
-        pre         = prompt.dialog_prompt( cnfg.dialogs[ 0 ] ) + '\n'
-    if len( cnfg.dialogs ) > 1:
-        post        = '\n' + prompt.dialog_prompt( cnfg.dialogs[ -1 ] )
-
-    for n in cnfg.news_numbers:
-        if cnfg.VERBOSE:
-            i_mode      = "with image" if with_img  else "without image"
-            print( f"processing news {n} {i_mode}" )
-        pr, name        = prompt.news_prompt( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
-        if cnfg.interface == "openai":
-            completion  = complete.complete( pr )
-            pr          = prompt.prune_news_prompt( pr )
-        else:
-            if with_img:
-                image   = prompt.jpg_image( n )
-            else:
-                image   = None
-            completion  = complete.complete( pr, image=image )
-        res             = check_news( completion )
-        scores[ n ]     = res
-        prompts.append( pr )
-        completions.append( completion )
-        img_names.append( name )
-
-    return prompts, completions, scores, img_names
-
-
-def print_header( fstream ):
-    """
-    save results of completion(s) on file
-    compose a filename with current date and time for saving results of completion(s),
-    print all information about the model and the execution
-    return:
-        [TextIOWrapper] text stream of the file open for writing
-    """
+    # write the command that executed the program
     command     = sys.executable + " " + " ".join( sys.argv )
     host        = platform.node()
     fstream.write( 60 * "=" + "\n\n" )
-    fstream.write( "executing:\n" + command )     # write the command line that executed the completion
+    fstream.write( "executing:\n" + command )
     fstream.write( "\non host " + host + "\n\n" )
+
+    # write info on config parameters
     fstream.write( 60 * "=" + "\n\n" )
-    fstream.write( str( cnfg ) )                  # write all information on parameters used in the completion
-    fstream.write( 60 * "=" + "\n\n" )
+    fstream.write( str( cnfg ) )
+    fstream.write( "\n" + 60 * "=" + "\n\n" )
 
 
-def print_content( fstream, prompt, completions ):
+def write_content( fstream, prompt, completions ):
     """
-    print the content of prompts and completions
+    Write the content of prompts and completions on the log file
 
-    inputs:
+    params:
         fstream     [TextIOWrapper] text stream of the output file
         prompt      [list] of dialog messages
-        completion  [list] of [str]
+        completions [list] of [str]
     """
     for p in prompt:
-#       print( p )
-        fstream.write( f"\nrole: {p['role']}\n" )
-        fstream.write( f"content:\n {p['content']}\n" )
-        fstream.write( 60 * "-" + "\n" )
-    fstream.write( 60 * "-" + "\n\n" )
+        fstream.write( f"ROLE: {p['role']}\n" )
+        fstream.write( f"PROMPT:\n {p['content']}\n\n" )
+
     for i, c in enumerate( completions ):
-        fstream.write( f"completion #{i:3d}:\n{c}\n\n" )
-    fstream.write( 60 * "-" + "\n\n" )
+        fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
+        # fstream.write( f"COMPLETION #{i:3d}:\n{c}\n\n" )
 
 
-
-def print_news( fstream, prompts, completions, results, img_names ):
+def write_results( fstream, prompts, completions, results, img_names ):
     """
-    print results of ToM analysis on file, divided in two parts: first the task number/accuracy,
-    then the log of the entire dialogs
+    Write stats about the results and then the log of all dialogs
 
-    inputs:
+    params:
         fstream     [TextIOWrapper] text stream of the output file
         prompt      [list] of prompts
         completions [list] of completions
         results     [dict] of scores per news
         img_names   [list] of image names
     """
+    question        = cnfg.dialogs[ -1 ]    # the stats are about only the last prompt question
+    all_n           = 0
+    fstream.write( f"Results for question {question}:\n" )
+    fstream.write( '\nItem\t\tFraction of "yes"\n' )
 
+    # stats for executions using news with AND without images
     if cnfg.experiment == "both":
-        question        = cnfg.dialogs[ -1 ]
         all_res_img     = []
         all_res_noi     = []
-        all_n           = 0
-        fstream.write( 60 * "=" + "\n\n" )
-        fstream.write( f"\n\n====== results in response of question {question} ===============\n" )
-        fstream.write( '\nitem\t\tfraction of "yes"\n' )
         fstream.write( '\t\twith image\twithout\n' )
         res_img         = results[ "with_img" ]
         res_noi         = results[ "no_img" ]
@@ -328,16 +250,11 @@ def print_news( fstream, prompts, completions, results, img_names ):
         all_res_noi     = np.array( all_res_noi )
         mean_noi        = all_res_noi.mean()
         std_noi         = all_res_noi.std()
-        fstream.write( "\n" + 60 * "-" + "\n" )
-        fstream.write( f"mean[std]:\t{mean_img:4.2f}[{std_img:4.2f}]\t{mean_noi:4.2f}[{std_noi:4.2f}]\n" )
+        fstream.write( f"\nmean [std]:\t{mean_img:4.2f} [{std_img:4.2f}]\t{mean_noi:4.2f} [{std_noi:4.2f}]\n" )
 
+    # stats for executions using news with OR without images
     else:
-        question        = cnfg.dialogs[ -1 ]
         all_res         = []
-        all_n           = 0
-        fstream.write( 60 * "=" + "\n\n" )
-        fstream.write( f"\n\n====== results in response of question {question} ===============\n" )
-        fstream.write( '\nitem\tfraction of "yes"\n' )
         k_items         = list( results.keys() )
         k_items.sort()
         for k  in k_items:
@@ -354,66 +271,143 @@ def print_news( fstream, prompts, completions, results, img_names ):
         all_res         = np.array( all_res )
         mean            = all_res.mean()
         std             = all_res.std()
-        fstream.write( "\n" + 60 * "-" + "\n" )
-        fstream.write( f"mean: {mean:5.3f}\tstd: {std:5.3f}\n" )
+        fstream.write( f"\nmean: {mean:5.2f}\tstd: {std:5.2f}\n" )
 
-    fstream.write( 60 * "=" + "\n\n\n" )
-    fstream.write( "\n\n========== complete dialogs =======================\n\n" )
+    # log of all dialogs
+    fstream.write( "\n" + 60 * "=" + "\n" )
     news_list   = cnfg.news_numbers
     if cnfg.experiment == "both":
         news_list   += cnfg.news_numbers
     for i, pr, compl, name in zip( news_list, prompts, completions, img_names ):
         if len( name ):
-            fstream.write( f"\n---------- news {i:3d} with image {name} -------------\n\n" )
+            fstream.write( f"\n---------------- News {i} with image {name} -----------------\n\n" )
         else:
-            fstream.write( f"\n---------- news {i:3d} without image     -------------\n\n" )
-        print_content( fstream, pr, compl )
+            fstream.write( f"\n------------------- News {i} with no image -------------------\n\n" )
+        write_content( fstream, pr, compl )
         fstream.write( 60 * "=" + "\n" )
 
 
-def exec_completions():
+
+# ===================================================================================================================
+#
+#   Main functions calling the LLM on news data
+#   - check_reply
+#   - ask_news
+#   - do_exec
+#
+# ===================================================================================================================
+
+def check_reply( completion ):
     """
-    execute the functions for the completion mode of the program
-    account for various execution mode of the program (only CRA at the moment...)
+    Check the model answers in response to yes/no questions.
+
+    params:
+        completion  [list] of completion text
+
+    return:         [np.array] of booleans
     """
-    global          true_words
-    fstream         = open( exec_log, 'w', encoding="utf-8" )   # open the file for reporting completions
-    print_header( fstream )
+    nc      = len( completion )
+    res     = np.full( nc, False )
+
+    for i, c in enumerate( completion ):
+        c   = c.lower()
+        if "yes" in c:              # this check is not very robust, but okay for now...
+            res[ i ]    = True
+
+    return res
+
+
+def ask_news( with_img=True ):
+    """
+    Prepare the prompts and obtain the model completions
+
+    params:
+        with_img    [bool] whether the prompts include image and text
+
+    return:
+        [tuple] of:
+                    prompts     [list] of all prompt conversations
+                    completions [list] the list of completions
+                    scores      [list] of the yes/not answers
+    """
+    prompts         = []        # initialize the list of prompts
+    completions     = []        # initialize the list of completions
+    scores          = dict()    # initialize the yes/not replies
+    img_names       = []        # initialize the list of image names
+    pre             = ""        # optional preliminary dialog turn
+    post            = ""        # optional post dialog turn, typically a query
+
+    if not len( cnfg.news_numbers ):
+        # use all news in file if not specified otherwise
+        cnfg.news_numbers   = prmpt.n_news()
+
+    if len( cnfg.dialogs ):
+        pre         = prmpt.dialog_prompt( cnfg.dialogs[ 0 ] ) + '\n'
+    if len( cnfg.dialogs ) > 1:
+        post        = '\n' + prmpt.dialog_prompt( cnfg.dialogs[ -1 ] )
+
+    for n in cnfg.news_numbers:
+        if cnfg.VERBOSE:
+            i_mode      = "with image" if with_img  else "without image"
+            print( f"Processing news {n} {i_mode}" )
+
+        pr, name        = prmpt.news_prompt( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
+
+        if cnfg.interface == "openai":
+            completion  = cmplt.complete( pr )
+            pr          = prmpt.prune_news_prompt( pr ) # remove the textual version of the image from the prompt
+        else:
+            image       = prmpt.jpg_image( n ) if with_img else None
+            completion  = cmplt.complete( pr, image=image )
+
+        res             = check_reply( completion )
+        scores[ n ]     = res
+        prompts.append( pr )
+        completions.append( completion )
+        img_names.append( name )
+
+    return prompts, completions, scores, img_names
+
+
+def do_exec():
+    """
+    Execute the program in one of the available modality (with image, without, or both) and save the results.
+
+    return:     True if execution is succesful
+    """
+    fstream         = open( exec_log, 'w', encoding="utf-8" )   # open the log file
+    write_header( fstream )
 
     match cnfg.experiment:
 
         case "news_noimage":
-            pr, compl, res, names   = do_news( with_img=False )
-            print_news( fstream, pr, compl, res, names )
-            with open( exec_file, 'wb' ) as f:
-                pickle.dump( ( res ), f ) # save the results and the word counts
+            pr, compl, res, names   = ask_news( with_img=False )
+            write_results( fstream, pr, compl, res, names )
+            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
+                pickle.dump( ( res ), f )
 
         case "news_image":
-            pr, compl, res, names   = do_news( with_img=True )
-            print_news( fstream, pr, compl, res, names )
-            prompts, completions, results   = do_news( with_img=True )
-            print_news( fstream, prompts, completions, results )
-            with open( exec_file, 'wb' ) as f:
-                pickle.dump( ( res ), f ) # save the results and the word counts
+            pr, compl, res, names   = ask_news( with_img=True )
+            write_results( fstream, pr, compl, res, names )
+            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
+                pickle.dump( ( res ), f )
 
         case "both":
-            pr_img, com_img, res_img, n_i   = do_news( with_img=True )
-            pr_noi, com_noi, res_noi, n_n   = do_news( with_img=False )
+            pr_img, com_img, res_img, n_i   = ask_news( with_img=True )
+            pr_noi, com_noi, res_noi, n_n   = ask_news( with_img=False )
             prompts                         = pr_img + pr_noi
             completions                     = com_img + com_noi
             names                           = n_i + n_n
             results                         = { "with_img": res_img, "no_img": res_noi }
-            print_news( fstream, prompts, completions, results, names )
-            with open( exec_file, 'wb' ) as f:
-                pickle.dump( ( results ), f ) # save the results and the word counts
+            write_results( fstream, prompts, completions, results, names )
+            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
+                pickle.dump( ( results ), f )
 
         case _:
-            if cnfg.VERBOSE: print( f"experiment {cnfg.experiment} not implemented" )
+            print( f"WARNING: experiment '{cnfg.experiment}' not implemented" )
             return None
 
     fstream.close()
-
-
     return True
 
 
@@ -423,8 +417,9 @@ def exec_completions():
 #   MAIN
 #
 # ===================================================================================================================
+
 if __name__ == '__main__':
-    if DEBUG:                               # do whatever commmand you want to debug
+    if DEBUG:
         sys.exit()
 
     if DO_NOTHING:
@@ -432,13 +427,7 @@ if __name__ == '__main__':
 
     else:
         init_cnfg()
-        if cnfg.LIST:                       # list current available models
-            cnfg.VERBOSE    = True
-            print( "\n" + 80 * '_' )
-            ls_models()
-            print( "\n" + 80 * '_' )
-            sys.exit()
         init_dirs()
         if cnfg.experiment is not None:
             archive()
-            exec_completions()
+            do_exec()

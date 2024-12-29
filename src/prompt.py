@@ -27,6 +27,19 @@ img_offset              = 10                        # offset at the border of ne
 detail                  = "high"                    # detail parameter for OpenAI image handling, overwritten by cnfg
 
 
+def n_news():
+    """
+    return the list with all ID of the news found in the dataset
+
+    return:     [list] with news IDs
+    """
+    fname       = os.path.join( data_dir, f_news )
+    with open( fname, 'r' ) as f: data = json.load( f )
+    n_list      = [ d[ 'id' ] for d in data ]
+
+    return n_list
+
+
 def jpg_image( i ):
     """
     return one news image as PIL jpeg format object

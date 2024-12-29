@@ -17,7 +17,6 @@ class Config( object ):
 
     CONFIG                  [str] name of configuration file (without path nor extension) (DEFAULT=None)
     DEBUG                   [str] debug mode: print prompts only, do not call OpenAI
-    LIST                    [bool] list information about models, files, fine-tuning
     MAXTOKENS               [int] maximum number of tokens (DEFAULT=None)
     MODEL                   [int] index in the list of possible models (DEFAULT=0)
     NRETURNS                [int] number of return sequences (DEFAULT=None)
@@ -56,7 +55,7 @@ class Config( object ):
             setattr( self, key, value )
 
         if not hasattr( self, 'news_numbers' ):
-            self.init_dialog        = [ 1 ]
+            self.news_numbers       = []
         if not hasattr( self, 'dialogs' ):
             self.init_dialog        = [ "prologue_1", "ask_reliability" ]
         if not hasattr( self, 'model_id' ):
@@ -124,13 +123,6 @@ def read_args():
             action          = 'store_true',
             dest            = 'DEBUG',
             help            = "debug mode: print prompts only, do not call OpenAI"
-    )
-    parser.add_argument(
-            '-L',
-            '--list',
-            action          = 'store_true',
-            dest            = 'LIST',
-            help            = "list information about models, files, fine-tuning"
     )
     parser.add_argument(
             '-m',
