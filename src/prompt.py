@@ -19,19 +19,13 @@ dir_json                = "../data"                 # directory with all input d
 dir_imgs                = "../imgs"                 # directory with news images
 f_dialog                = "dialogs.json"            # filename of the preliminary dialogs
 f_news                  = "news.json"               # filename of the news tests
-
-img_width               = 720                       # typical width of news images (not the same for all)
-img_height              = 290                       # typical height of news images (not the same for all)
-img_spacing             = 40                        # spacing between top and bottom images in a composition
-img_offset              = 10                        # offset at the border of news images
-detail                  = "high"                    # detail parameter for OpenAI image handling, overwritten by cnfg
+detail                  = "high"                    # parameter for OpenAI image, overwritten by cnfg
 
 
 # ===================================================================================================================
 #
 #   Utilities to read data
 #   - list_news
-#   - list_dialogs
 #   - image_pil
 #   - image_b64
 #   - get_dialog
@@ -52,20 +46,6 @@ def list_news():
     return ids
 
 
-def list_dialogs():
-    """
-    Return the list with all ID of the dialogs found in the JSON dataset
-
-    return:     [list] with dialog IDs
-    """
-    fname   = os.path.join( dir_json, f_dialog )
-    with open( fname, 'r' ) as f:
-        data    = json.load( f )
-    ids     = [ d[ 'id' ] for d in data ]
-
-    return ids
-
-
 def image_pil( i ):
     """
     Return an image as PIL object, as requested in LlaVa prompts
@@ -75,7 +55,11 @@ def image_pil( i ):
 
     return:     [PIL.JpegImagePlugin.JpegImageFile]
     """
-    ids     = list_news()
+    fname   = os.path.join( dir_json, f_news )
+    with open( fname, 'r' ) as f:
+        data    = json.load( f )
+    ids     = [ int( d[ 'id' ] ) for d in data ]
+
     try:
         idx     = ids.index( i )
     except Exception as e:
@@ -113,7 +97,11 @@ def get_dialog( i ):
 
     return:     [str] the dialog content
     """
-    ids         = list_dialogs()
+    fname   = os.path.join( dir_json, f_dialog )
+    with open( fname, 'r' ) as f:
+        data    = json.load( f )
+    ids     = [ d[ 'id' ] for d in data ]
+
     try:
         idx     = ids.index( i )
     except Exception as e:
@@ -229,4 +217,3 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
         ]
     } ]
     return prompt, fimage
-    
