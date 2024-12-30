@@ -1,7 +1,7 @@
 """
 #####################################################################################################################
 
-Module to set configuration parameters
+    Module to read and set configuration parameters
 
 #####################################################################################################################
 """
@@ -13,20 +13,22 @@ from    argparse        import ArgumentParser
 
 class Config( object ):
     """
-    LIST of all PARAMETERS accepted by the software - several parameters can be given in the configuration file
-    as well as with command line flags
+    Object containing all parameters accepted by the software.
+    Several parameters can be given in the configuration file as well as with command line flags.
 
+    Command line flags:
     CONFIG                  [str] name of configuration file (without path nor extension) (DEFAULT=None)
-    DEBUG                   [str] debug mode: print prompts only, do not call OpenAI
+    DEBUG                   [str] debug mode: print prompts only, do not call LLMs
     MAXTOKENS               [int] maximum number of tokens (DEFAULT=None)
     MODEL                   [int] index in the list of possible models (DEFAULT=0)
     NRETURNS                [int] number of return sequences (DEFAULT=None)
     VERBOSE                 [bool] write additional information
 
+    Configuration file parameters:
     detail                  [str] detail parameter for OpenAI image handling: "high", "low", "auto"
     dialogs                 [list] an arbitrary list of dialog titles, the first and the last are always used
-    f_dialog                [str] filname of json file with dialogs
-    f_news                  [str] filname of json file with the news
+    f_dialog                [str] filename of json file with dialogs
+    f_news                  [str] filename of json file with the news
     model_id                [int] index in the list of possible models (overwritten by MODEL)
     n_returns               [int] number of return sequences (overwritten by NRETURNS)
     max_tokens              [int] maximum number of tokens (overwritten by MAXTOKENS)
@@ -36,22 +38,24 @@ class Config( object ):
     """
 
     def load_from_line( self, line_kwargs ):
-        """ ---------------------------------------------------------------------------------------------------------
-        Load parameters from arguments passed in command line. Check the consistence of the
-        given parameteres
+        """
+        Load parameters from command line arguments
 
-        line_kwargs:        [dict] parameteres read from arguments passed in command line
-        --------------------------------------------------------------------------------------------------------- """
+        params:
+            line_kwargs     [dict] parameteres read from arguments passed in command line
+        """
         for key, value in line_kwargs.items():
             setattr( self, key, value )
 
 
     def load_from_file( self, file_kwargs ):
-        """ ---------------------------------------------------------------------------------------------------------
-        Load parameters from a python file. Check the correctness of parameteres, set defaults
+        """
+        Load parameters from a python file.
+        Check the correctness of parameteres, set defaults.
 
-        file_kwargs:        [dict] parameteres coming from a python module (file)
-        --------------------------------------------------------------------------------------------------------- """
+        params:
+            file_kwargs     [dict] parameteres coming from a python module (file)
+        """
         for key, value in file_kwargs.items():
             setattr( self, key, value )
 
@@ -72,9 +76,9 @@ class Config( object ):
 
 
     def __str__( self ):
-        """ ---------------------------------------------------------------------------------------------------------
+        """
         Visualize the list of all parameters
-        --------------------------------------------------------------------------------------------------------- """
+        """
         s   = ''
         d   = self.__dict__
 
@@ -93,11 +97,11 @@ class Config( object ):
 
 
 def read_args():
-    """ -------------------------------------------------------------------------------------------------------------
+    """
     Parse the command-line arguments defined by flags
 
     return:         [dict] key = name of parameter, value = value of parameter
-    ------------------------------------------------------------------------------------------------------------- """
+    """
     parser      = ArgumentParser()
 
     parser.add_argument(
@@ -123,7 +127,7 @@ def read_args():
             '--debug',
             action          = 'store_true',
             dest            = 'DEBUG',
-            help            = "debug mode: print prompts only, do not call OpenAI"
+            help            = "debug mode: print prompts only, do not call LLMs"
     )
     parser.add_argument(
             '-m',
