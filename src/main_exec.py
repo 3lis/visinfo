@@ -128,9 +128,9 @@ def init_cnfg():
 
     # export information from config
     if hasattr( cnfg, 'f_dialog' ):     prmpt.f_dialog  = cnfg.f_dialog
-    if hasattr( cnfg, 'detail' ):       prmpt.detail   = cnfg.detail
+    if hasattr( cnfg, 'detail' ):       prmpt.detail    = cnfg.detail
 
-    # pass the configuration object to module cmplt.py
+    # pass the configuration object to module complete.py
     cmplt.cnfg       = cnfg
 
 
