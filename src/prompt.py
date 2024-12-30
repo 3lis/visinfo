@@ -115,14 +115,14 @@ def get_dialog( i ):
 # ===================================================================================================================
 #
 #   Functions composing prompts
-#   - prune_prompt
+#   - prune_openai
 #   - prompt_news
 #
 # ===================================================================================================================
 
 def prune_prompt( prompt ):
     """
-    Prune the b64-encoded images from the prompt.
+    Prune the b64-encoded images and other unwanted structures from the prompt result.
     This is used to save the textual part only in the log.
 
     params:

@@ -349,7 +349,7 @@ def ask_news( with_img=True ):
     for n in cnfg.news_ids:
         if cnfg.VERBOSE:
             i_mode      = "with image" if with_img  else "without image"
-            print( f"Processing news {n} {i_mode}" )
+            print( f"==========> Processing news {n} {i_mode} <==========" )
 
         pr, name        = prmpt.prompt_news( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
 
@@ -361,6 +361,7 @@ def ask_news( with_img=True ):
         else:
             image       = prmpt.image_pil( n ) if with_img else None
             completion  = cmplt.complete( pr, image=image )
+            pr          = prmpt.prune_prompt( pr ) # remove the textual version of the image from the prompt
 
         res             = check_reply( completion )
         scores[ n ]     = res
