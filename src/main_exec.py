@@ -106,7 +106,7 @@ def init_cnfg():
         cnfg.top_p          = 1                             # set a reasonable default
         cnfg.temperature    = 0.3                           # set a reasonable default
         cnfg.dialogs        = []                            # set a reasonable default
-        cnfg.news_numbers   = []                            # set a reasonable default
+        cnfg.news_ids       = []                            # set a reasonable default
 
     if not hasattr( cnfg, 'experiment' ):
         cnfg.experiment         = None                      # whether experiment uses images or not
@@ -142,10 +142,10 @@ def archive():
                 "news.json" )
 
     pfiles  = [ "main_exec.py",
-                "prmpt.py",
+                "prompt.py",
                 "load_cnfg.py",
                 "models.py",
-                "cmplt.py" ]
+                "complete.py" ]
 
     if cnfg.CONFIG is not None:
         pfiles.append( cnfg.CONFIG + ".py" )
@@ -275,9 +275,9 @@ def write_results( fstream, prompts, completions, results, img_names ):
 
     # log of all dialogs
     fstream.write( "\n" + 60 * "=" + "\n" )
-    news_list   = cnfg.news_numbers
+    news_list   = cnfg.news_ids
     if cnfg.experiment == "both":
-        news_list   += cnfg.news_numbers
+        news_list   += cnfg.news_ids
     for i, pr, compl, name in zip( news_list, prompts, completions, img_names ):
         if len( name ):
             fstream.write( f"\n---------------- News {i} with image {name} -----------------\n\n" )
@@ -337,27 +337,29 @@ def ask_news( with_img=True ):
     pre             = ""        # optional preliminary dialog turn
     post            = ""        # optional post dialog turn, typically a query
 
-    if not len( cnfg.news_numbers ):
+    if not len( cnfg.news_ids ):
         # use all news in file if not specified otherwise
-        cnfg.news_numbers   = prmpt.n_news()
+        cnfg.news_ids   = prmpt.list_news()
 
     if len( cnfg.dialogs ):
-        pre         = prmpt.dialog_prompt( cnfg.dialogs[ 0 ] ) + '\n'
+        pre         = prmpt.get_dialog( cnfg.dialogs[ 0 ] )
     if len( cnfg.dialogs ) > 1:
-        post        = '\n' + prmpt.dialog_prompt( cnfg.dialogs[ -1 ] )
+        post        = prmpt.get_dialog( cnfg.dialogs[ -1 ] )
 
-    for n in cnfg.news_numbers:
+    for n in cnfg.news_ids:
         if cnfg.VERBOSE:
             i_mode      = "with image" if with_img  else "without image"
             print( f"Processing news {n} {i_mode}" )
 
-        pr, name        = prmpt.news_prompt( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
+        pr, name        = prmpt.prompt_news( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
 
+        # using OpenAI
         if cnfg.interface == "openai":
             completion  = cmplt.complete( pr )
-            pr          = prmpt.prune_news_prompt( pr ) # remove the textual version of the image from the prompt
+            pr          = prmpt.prune_prompt( pr ) # remove the textual version of the image from the prompt
+        # using HuggingFace
         else:
-            image       = prmpt.jpg_image( n ) if with_img else None
+            image       = prmpt.image_pil( n ) if with_img else None
             completion  = cmplt.complete( pr, image=image )
 
         res             = check_reply( completion )

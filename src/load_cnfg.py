@@ -34,7 +34,7 @@ class Config( object ):
     max_tokens              [int] maximum number of tokens (overwritten by MAXTOKENS)
     top_p                   [int] probability mass of tokens generated in completion (default=1)
     temperature             [float] sampling temperature during completion (default=1.0)
-    news_numbers            [list] numbers of newss to process
+    news_ids                [list] numbers of news to process
     """
 
     def load_from_line( self, line_kwargs ):
@@ -59,8 +59,8 @@ class Config( object ):
         for key, value in file_kwargs.items():
             setattr( self, key, value )
 
-        if not hasattr( self, 'news_numbers' ):
-            self.news_numbers       = []
+        if not hasattr( self, 'news_ids' ):
+            self.news_ids           = []
         if not hasattr( self, 'dialogs' ):
             self.init_dialog        = [ "prologue_1", "ask_reliability" ]
         if not hasattr( self, 'model_id' ):

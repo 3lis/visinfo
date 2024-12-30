@@ -15,10 +15,9 @@ import  json
 from    PIL         import Image
 
 
-data_dir                = "../data"                 # directory with all input data
-img_dir                 = "../imgs"                 # directory with news images
+dir_json                = "../data"                 # directory with all input data
+dir_imgs                = "../imgs"                 # directory with news images
 f_dialog                = "dialogs.json"            # filename of the preliminary dialogs
-f_tasks                 = "tasks.json"              # filename of the Kosinski ToM tasks
 f_news                  = "news.json"               # filename of the news tests
 
 img_width               = 720                       # typical width of news images (not the same for all)
@@ -28,116 +27,121 @@ img_offset              = 10                        # offset at the border of ne
 detail                  = "high"                    # detail parameter for OpenAI image handling, overwritten by cnfg
 
 
-def n_news():
+# ===================================================================================================================
+#
+#   Utilities to read data
+#   - list_news
+#   - list_dialogs
+#   - image_pil
+#   - image_b64
+#   - get_dialog
+#
+# ===================================================================================================================
+
+def list_news():
     """
-    return the list with all ID of the news found in the dataset
+    Return the list with all ID of the news found in the JSON dataset
 
     return:     [list] with news IDs
     """
-    fname       = os.path.join( data_dir, f_news )
-    with open( fname, 'r' ) as f: data = json.load( f )
-    n_list      = [ d[ 'id' ] for d in data ]
+    fname   = os.path.join( dir_json, f_news )
+    with open( fname, 'r' ) as f:
+        data    = json.load( f )
+    ids     = [ int( d[ 'id' ] ) for d in data ]
 
-    return n_list
+    return ids
 
 
-def jpg_image( i ):
+def list_dialogs():
     """
-    return one news image as PIL jpeg format object
-    as requested in Lava prompt
+    Return the list with all ID of the dialogs found in the JSON dataset
 
-    i           [int] number of the news
+    return:     [list] with dialog IDs
+    """
+    fname   = os.path.join( dir_json, f_dialog )
+    with open( fname, 'r' ) as f:
+        data    = json.load( f )
+    ids     = [ d[ 'id' ] for d in data ]
+
+    return ids
+
+
+def image_pil( i ):
+    """
+    Return an image as PIL object, as requested in LlaVa prompts
+
+    params:
+        i       [int] id of the news linked to the image
 
     return:     [PIL.JpegImagePlugin.JpegImageFile]
     """
-    fname       = os.path.join( data_dir, f_news )
-    with open( fname, 'r' ) as f: data = json.load( f )
-    ids         = [ int( d[ 'id' ] ) for d in data ]
+    ids     = list_news()
     try:
         idx     = ids.index( i )
     except Exception as e:
-        print( f"non existing news with ID {i} in jpg_image()" )
+        print( f"ERROR: non existing news with ID={i} in image_pil()" )
         raise e
-    img_name    = data[ idx ][ "image" ]
-    fname       = os.path.join( img_dir, img_name )
-    img         = Image.open( fname )
 
+    img_name    = data[ idx ][ "image" ]
+    fname       = os.path.join( dir_imgs, img_name )
+    img         = Image.open( fname )
     return img
 
 
-def one_image( fname ):
+def image_b64( fname ):
     """
-    convert one news image into b64encoded string, as requested in the
-    message for the OpenAi model
+    Return an image as b64encoded string, as requested in OpenAi prompts
 
-    fname       [str] name of the file, without path and extension
+    params:
+        fname   [str] name of the file, without path
 
     return:     [bytes] the b64encoded image
     """
-    fname       = os.path.join( img_dir, fname )
+    fname       = os.path.join( dir_imgs, fname )
     with open( fname, 'rb' ) as f:
         img_str     = base64.b64encode( f.read() ).decode( "utf-8" )
 
     return img_str
 
 
-def insert_vars( s, var ):
+def get_dialog( i ):
     """
-    insert the values of independent variables if present in the given string
-    placeholders for variable should follow the standard syntax
-        {var_name}
-    if var_name is found as key in the dictionary var the string is filled with the value
+    Return a single dialog from the JSON dataset
 
-    s:          [str] the input string
-    var:        [dic] with variable names as keys and their values with [str] format
+    params:
+        i       [str] ID of the dialog
 
-    return:     [list]
+    return:     [str] the dialog content
     """
-    # need to gather the names of variables (if any), not that straightforward,
-    # after quite a lot of experiments, this instruction does the trick...
-    var_list    = [ v for _, v, _, _ in string.Formatter().parse( s ) if v is not None ]
-
-    if not len( var_list ):             # if there is no slot for variables, return the unmodified string
-        return s
-
-    for v in var_list:                  # if a variable is not in the given dictionary raise an error
-        assert v in var.keys(), f"error in insert_vars: missing variable {v}"
-
-    return s.format( **var )            # fill the slots with the value of the variables
-
-
-def dialog_prompt( i ):
-    """
-    get a portion of prompt from the dialog dataset
-
-    i:          [int] "id" field in the dialogs
-
-    return:     [str] the prompt partial content
-    """
-
-    prompt      = []
-    fname       = os.path.join( data_dir, f_dialog )
-    with open( fname, 'r' ) as f: data = json.load( f )
-    ids         = [ d[ 'id' ] for d in data ]
+    ids         = list_dialogs()
     try:
         idx     = ids.index( i )
     except Exception as e:
-        print( f"non existing dialog {i} in dialog_prompt()" )
+        print( f"ERROR: non existing dialog '{i}' in get_dialog()" )
         raise e
     text    = data[ idx ][ "content" ]
-
     return text
 
 
-def prune_news_prompt( prompt ):
-    """
-    prune the large base64 encoded images from the prompt, to save the relevant part only
 
-    prompt:     [list] the propmt
+# ===================================================================================================================
+#
+#   Functions composing prompts
+#   - prune_prompt
+#   - prompt_news
+#
+# ===================================================================================================================
+
+def prune_prompt( prompt ):
+    """
+    Prune the b64-encoded images from the prompt.
+    This is used to save the textual part only in the log.
+
+    params:
+        prompt  [list] the prompt
 
     return:     [list] the pruned prompt
     """
-
     pruned      = []
 
     for p in prompt:
@@ -152,38 +156,47 @@ def prune_news_prompt( prompt ):
     return pruned
 
 
-def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
+def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
     """
-    compose the prompt for processing one news
-    taking into account the language model interface
+    Compose the prompt to process one news.
+    For OpenAI interface, the image is passed within the prompt.
+    For HF interface, the image is passed separately in complete.py
 
-    news        [int] the news item to test
-    interface   [str] "openai" or "hf"
-    with_img    [bool] combine the news with the image
+    params:
+        news        [int] the news item to test
+        interface   [str] "openai" or "hf"
+        pre         [str] optional text before the news content
+        post        [str] optional text after the news content
+        with_img    [bool] combine the news with the image
 
-    return:     [tuple] ( [list] the prompt, [str] image name, empty string if not with_img )
+    return:         [list] the prompt
+                    [str] image name or "" if not with_img
     """
-
-    fname           = os.path.join( data_dir, f_news )
-    with open( fname, 'r' ) as f: data = json.load( f )
-    ids         = [ int( d[ 'id' ] ) for d in data ]
+    fname   = os.path.join( dir_json, f_news )
+    with open( fname, 'r' ) as f:
+        data    = json.load( f )
+    ids     = [ int( d[ 'id' ] ) for d in data ]
 
     try:
         idx     = ids.index( news_id )
     except Exception as e:
-        print( f"non existing news with ID {news_id} in news_prompt()" )
+        print( f"ERROR: non existing news with ID {news_id} in prompt_news()" )
         raise e
+
     news                = data[ idx ]
+    title               = news[ "title" ]
     text                = news[ "content" ]
     fimage              = news[ "image" ]
-    text                = pre + text + post
 
-    if interface == "openai":   # OpenAI includes the image as string in the prompt
-        if with_img:                    # include directive for processing the image
-            image               = one_image( fimage )
+    full_text           = f"{pre}\n{title} - {text}\n{post}"
+
+    if interface == "openai":
+        # OpenAI with image included as string in the prompt
+        if with_img:
+            image               = image_b64( fimage )
             img_content         = {
-                    "type": "image_url",
-                    "image_url" : {
+                    "type":         "image_url",
+                    "image_url" :   {
                         "url":      f"data:image/jpeg;base64,{image}",
                         "detail":   detail
                     }
@@ -191,37 +204,29 @@ def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
             prompt      = [ {
                 "role":     "user",
                 "content":  [
-                {
-                    "type": "text",
-                    "text": text
-                },
-                img_content
+                    { "type": "text", "text": full_text },
+                    img_content
                 ]
             } ]
             return prompt, fimage
-        else:                       # huggingface do not include the image in the prompt
-            prompt      = [ {           # no image processing directive
+
+        # OpenAI without image
+        else:
+            prompt      = [ {
                 "role":     "user",
-                "content":  [
-                {
-                    "type": "text",
-                    "text": text
-                }
-                ]
+                "content":  [ { "type": "text", "text": full_text } ]
             } ]
             return prompt, ''
 
-# the huggingface has a bug that does not allow inference without an image, therefore there
-# is no difference for the with_img flag, a dummy image will be loaded in this case
+    # HuggingFace with or without image
+    # NOTE currently huggingface has a bug that does not allow inference without an image (see complete.py)
     img_content         = { "type": "image" }
     prompt      = [ {
         "role":     "user",
         "content":  [
-        {
-            "type": "text",
-            "text": text
-        },
-        img_content
+            { "type": "text", "text": full_text },
+            { "type": "image" }
         ]
     } ]
     return prompt, fimage
+    
