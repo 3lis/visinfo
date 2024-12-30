@@ -48,7 +48,7 @@ def jpg_image( i ):
 
     i           [int] number of the news
 
-    return:     [tuple] ( [PIL.JpegImagePlugin.JpegImageFile], image_name )
+    return:     [PIL.JpegImagePlugin.JpegImageFile]
     """
     fname       = os.path.join( data_dir, f_news )
     with open( fname, 'r' ) as f: data = json.load( f )
@@ -62,7 +62,7 @@ def jpg_image( i ):
     fname       = os.path.join( img_dir, img_name )
     img         = Image.open( fname )
 
-    return img, img_name
+    return img
 
 
 def one_image( fname ):
@@ -178,8 +178,8 @@ def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
     fimage              = news[ "image" ]
     text                = pre + text + post
 
-    if with_img:                    # include directive for processing the image
-        if interface == "openai":   # OpenAI includes the image as string in the prompt
+    if interface == "openai":   # OpenAI includes the image as string in the prompt
+        if with_img:                    # include directive for processing the image
             image               = one_image( fimage )
             img_content         = {
                     "type": "image_url",
@@ -188,27 +188,40 @@ def news_prompt( news_id, interface="openai", pre="", post="", with_img=True ):
                         "detail":   detail
                     }
                 }
+            prompt      = [ {
+                "role":     "user",
+                "content":  [
+                {
+                    "type": "text",
+                    "text": text
+                },
+                img_content
+                ]
+            } ]
+            return prompt, fimage
         else:                       # huggingface do not include the image in the prompt
-            img_content         = { "type": "image" }
-        prompt      = [ {
-            "role":     "user",
-            "content":  [
-            {
-                "type": "text",
-                "text": text
-            },
-            img_content
-            ]
-        } ]
-        return prompt, fimage
+            prompt      = [ {           # no image processing directive
+                "role":     "user",
+                "content":  [
+                {
+                    "type": "text",
+                    "text": text
+                }
+                ]
+            } ]
+            return prompt, ''
 
-    prompt      = [ {           # no image processing directive
+# the huggingface has a bug that does not allow inference without an image, therefore there
+# is no difference for the with_img flag, a dummy image will be loaded in this case
+    img_content         = { "type": "image" }
+    prompt      = [ {
         "role":     "user",
         "content":  [
         {
             "type": "text",
             "text": text
-        }
+        },
+        img_content
         ]
     } ]
-    return prompt, ''
+    return prompt, fimage

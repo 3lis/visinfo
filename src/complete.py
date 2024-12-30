@@ -135,12 +135,11 @@ def complete_hf( prompt, image ):
     model       = client[ "model" ]
     processor   = client[ "processor" ]
     text        = processor.apply_chat_template( prompt, add_generation_prompt=True )
-    """
+    # dummy image as workaround for llava-next bug
     if image is None:
         image   = Image.new( mode='L', size=llava_next_res, color="white" )
     else:
         image   = image.resize( llava_next_res )
-    """
     inputs      = processor(
             images          = image,
             text            = text,
