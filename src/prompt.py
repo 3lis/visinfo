@@ -139,6 +139,7 @@ def prune_prompt( prompt ):
             role    = p[ "role" ]
             if "text" in p[ "content" ][ 0 ]:
                 text    = p[ "content" ][ 0 ][ "text" ]
+                # text    = text.lstrip()                     # remove annoying leading whitespace characters
                 pruned.append( { "role": role, "content": text } )
 
     return pruned

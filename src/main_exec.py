@@ -198,7 +198,7 @@ def write_content( fstream, prompt, completions ):
     """
     for p in prompt:
         fstream.write( f"ROLE: {p['role']}\n" )
-        fstream.write( f"PROMPT:\n {p['content']}\n\n" )
+        fstream.write( f"PROMPT:\n{p['content']}\n\n" )
 
     for i, c in enumerate( completions ):
         fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
