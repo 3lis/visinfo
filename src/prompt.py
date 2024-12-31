@@ -175,7 +175,7 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
     news                = data[ idx ]
     title               = news[ "title" ]
     text                = news[ "content" ]
-    fimage              = news[ "image" ]
+    fimage              = news[ "image" ] if with_img else ''
 
     full_text           = f"{pre}\n{title} - {text}\n{post}"
 
@@ -197,24 +197,27 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
                     img_content
                 ]
             } ]
-            return prompt, fimage
-
         # OpenAI without image
         else:
             prompt      = [ {
                 "role":     "user",
                 "content":  [ { "type": "text", "text": full_text } ]
             } ]
-            return prompt, ''
 
-    # HuggingFace with or without image
-    # NOTE currently huggingface has a bug that does not allow inference without an image (see complete.py)
-    img_content         = { "type": "image" }
-    prompt      = [ {
-        "role":     "user",
-        "content":  [
-            { "type": "text", "text": full_text },
-            { "type": "image" }
-        ]
-    } ]
+    elif interface == "hf":
+        # HuggingFace with or without image
+        # NOTE currently huggingface has a bug that does not allow inference without an image (see complete.py)
+        img_content         = { "type": "image" }
+        prompt      = [ {
+            "role":     "user",
+            "content":  [
+                { "type": "text", "text": full_text },
+                { "type": "image" }
+            ]
+        } ]
+
+    else:
+        print( f"ERROR: model interface '{interface}' not supported" )
+        sys.exit()
+
     return prompt, fimage
