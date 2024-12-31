@@ -131,9 +131,9 @@ def init_cnfg():
     if hasattr( cnfg, 'f_dialog' ):     prmpt.f_dialog  = cnfg.f_dialog
     if hasattr( cnfg, 'detail' ):       prmpt.detail    = cnfg.detail
 
-    # pass the configuration object to module complete.py
-    cmplt.cnfg      = cnfg
-    save_res.cnfg   = cnfg
+    # pass global parameters to other modules
+    cmplt.cnfg          = cnfg
+    save_res.cnfg       = cnfg
 
 
 def archive():
@@ -141,14 +141,16 @@ def archive():
     Save a copy of current python source and json data files in the execution folder
     """
     jfiles  = ( "dialogs.json",
-                "news.json" )
+                "news.json"
+    )
 
     pfiles  = [ "main_exec.py",
                 "prompt.py",
                 "load_cnfg.py",
                 "models.py",
                 "save_res.py",
-                "complete.py" ]
+                "complete.py"
+    ]
 
     if cnfg.CONFIG is not None:
         pfiles.append( cnfg.CONFIG + ".py" )
@@ -252,21 +254,13 @@ def do_exec():
     return:     True if execution is succesful
     """
     fstream         = open( exec_log, 'w', encoding="utf-8" )   # open the log file
-    save_res.write_header( fstream )
 
     match cnfg.experiment:
-
         case "news_noimage":
             pr, compl, res, names           = ask_news( with_img=False )
-            save_res.write_dialogs( fstream, pr, compl, res, names )
-            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
-            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case "news_image":
             pr, compl, res, names           = ask_news( with_img=True )
-            save_res.write_dialogs( fstream, pr, compl, res, names )
-            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
-            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case "both":
             pr_img, com_img, res_img, n_i   = ask_news( with_img=True )
@@ -275,14 +269,12 @@ def do_exec():
             compl                           = com_img + com_noi
             names                           = n_i + n_n
             res                             = { "with_img": res_img, "no_img": res_noi }
-            save_res.write_dialogs( fstream, pr, compl, res, names )
-            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
-            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case _:
             print( f"ERROR: experiment '{cnfg.experiment}' not implemented" )
             return None
 
+    save_res.write_all( fstream, pr, compl, res, names, exec_csv, exec_pkl )
     fstream.close()
     return True
 

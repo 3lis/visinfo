@@ -6,6 +6,7 @@
 #####################################################################################################################
 """
 
+import  os
 import  sys
 import  platform
 import  pickle
@@ -47,15 +48,20 @@ def get_pickle( fname ):
         return pickle.load( f )
 
 
-def write_stats( fpkl, fcsv ):
+def write_stats( fcsv, fpkl=None, results=None ):
     """
-    Write in CSV file stats about the raw results in the pickle file
+    Write in CSV file stats about the results, either from the pickle file or from the data passed
 
     params:
-        fpkl        [str] pickle file with path and extension
         fcsv        [str] csv file with path and extension
+        fpkl        [str] optional pickle file with path and extension
+        results     [dict] optional structure with scores per news
     """
-    results     = get_pickle( fpkl )
+    if fpkl is not None:
+        results     = get_pickle( fpkl )
+    else:
+        assert results is not None, "ERROR: no pickle file or dict of results found"
+
     csv_header  = [ "News" ]
     csv_rows    = []
 
@@ -121,6 +127,7 @@ def write_stats( fpkl, fcsv ):
 #   - write_header
 #   - write_dialog
 #   - write_dialogs
+#   - write_all
 #
 # ===================================================================================================================
 
@@ -161,7 +168,6 @@ def write_dialog( fstream, prompt, completions ):
 
     for i, c in enumerate( completions ):
         fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
-        # fstream.write( f"COMPLETION #{i:3d}:\n{c}\n\n" )
 
 
 def write_dialogs( fstream, prompts, completions, results, img_names ):
@@ -175,61 +181,6 @@ def write_dialogs( fstream, prompts, completions, results, img_names ):
         results     [dict] of scores per news
         img_names   [list] of image names
     """
-    # question        = cnfg.dialogs[ -1 ]    # the stats are about only the last prompt question
-    # fstream.write( f"Results for question {question}:\n" )
-    # fstream.write( '\nItem\t\tFraction of "yes"\n' )
-    #
-    # # stats for executions using news with AND without images
-    # if cnfg.experiment == "both":
-    #     all_res_img     = []
-    #     all_res_noi     = []
-    #     fstream.write( '\t\twith image\twithout\n' )
-    #     res_img         = results[ "with_img" ]
-    #     res_noi         = results[ "no_img" ]
-    #     k_items         = list( res_img.keys() )
-    #     k_items.sort()
-    #     for k  in k_items:
-    #         r_i         = res_img[ k ]
-    #         r_n         = res_noi[ k ]
-    #         n           = len( r_n )
-    #         if not n:
-    #             fstream.write( f"{k:>3}\t\t0.00\t\t0.00\n" )
-    #         else:
-    #             yi      = r_i.sum() / n
-    #             yn      = r_n.sum() / n
-    #             all_res_img.append( yi )
-    #             all_res_noi.append( yn )
-    #             fstream.write( f"{k:>3}\t\t{yi:4.2f}\t\t{yn:4.2f}\n" )
-    #
-    #     all_res_img     = np.array( all_res_img )
-    #     mean_img        = all_res_img.mean()
-    #     std_img         = all_res_img.std()
-    #     all_res_noi     = np.array( all_res_noi )
-    #     mean_noi        = all_res_noi.mean()
-    #     std_noi         = all_res_noi.std()
-    #     fstream.write( f"\nmean [std]:\t{mean_img:4.2f} [{std_img:4.2f}]\t{mean_noi:4.2f} [{std_noi:4.2f}]\n" )
-    #
-    # # stats for executions using news with OR without images
-    # else:
-    #     all_res         = []
-    #     k_items         = list( results.keys() )
-    #     k_items.sort()
-    #     for k  in k_items:
-    #         res         = results[ k ]
-    #         n           = len( res )
-    #         if not n:
-    #             fstream.write( f"{k:>3}\t\t0.00\n" )
-    #         else:
-    #             r       = res.sum() / n
-    #             all_res.append( r )
-    #             fstream.write( f"{k:>3}\t\t{r:4.2f}\n" )
-    #
-    #     all_res         = np.array( all_res )
-    #     mean            = all_res.mean()
-    #     std             = all_res.std()
-    #     fstream.write( f"\nmean: {mean:5.2f}\tstd: {std:5.2f}\n" )
-
-    # log of all dialogs
     fstream.write( "\n" + 60 * "=" + "\n" )
     news_list   = cnfg.news_ids
     if cnfg.experiment == "both":
@@ -241,3 +192,29 @@ def write_dialogs( fstream, prompts, completions, results, img_names ):
             fstream.write( f"\n------------------- News {i} with no image -------------------\n\n" )
         write_dialog( fstream, pr, compl )
         fstream.write( 60 * "=" + "\n" )
+
+
+def write_all( fstream, prompts, completions, results, img_names, fcsv, fpkl ):
+    """
+    Write all result files (text log, csv, pkl)
+
+    params:
+        fstream     [TextIOWrapper] text stream of the output file
+        prompt      [list] of prompts
+        completions [list] of completions
+        results     [dict] of scores per news
+        img_names   [list] of image names
+        fcsv        [str] csv file with path and extension
+        fpkl        [str] pickle file with path and extension
+    """
+    write_pickle( fpkl, results )
+    write_stats( fcsv, results=results )
+    write_header( fstream )
+
+    # unix command to pretty print the csv in the text log
+    cmd     = f"column -s, -t <{fcsv}"
+    with os.popen( cmd ) as r:
+        s   = r.read()
+    fstream.write( s )
+
+    write_dialogs( fstream, prompts, completions, results, img_names )
