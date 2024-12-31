@@ -12,14 +12,13 @@
 import  os
 import  sys
 import  shutil
-import  platform
 import  time
-import  pickle
 import  numpy       as np
 
 import  load_cnfg                               # this module sets program parameters
 import  prompt      as prmpt                    # this module composes the prompts
 import  complete    as cmplt                    # this module performs LLM completions
+import  save_res                                # this module saves results
 
 # this module lists the available LLMs
 from    models      import models, models_endpoint, models_interface
@@ -40,8 +39,9 @@ cnfg                    = None                  # object containing the executio
 exec_dir                = None
 exec_src                = 'src'
 exec_data               = 'data'
-exec_log                = 'run.log'
-exec_file               = 'res.pkl'
+exec_log                = 'log.txt'
+exec_pkl                = 'res.pkl'
+exec_csv                = 'res.csv'
 
 
 # ===================================================================================================================
@@ -58,7 +58,7 @@ def init_dirs():
     Set paths and create directories where to save the current execution
     """
     global exec_dir, exec_src, exec_data        # dirs
-    global exec_log, exec_file                  # files
+    global exec_log, exec_pkl, exec_csv         # files
 
     exec_dir     = os.path.join( dir_res, now_time )
     while os.path.isdir( exec_dir ):
@@ -76,7 +76,8 @@ def init_dirs():
     os.makedirs( exec_src )
     os.makedirs( exec_data )
     exec_log        = os.path.join( exec_dir, exec_log )
-    exec_file       = os.path.join( exec_dir, exec_file )
+    exec_pkl        = os.path.join( exec_dir, exec_pkl )
+    exec_csv        = os.path.join( exec_dir, exec_csv )
 
 
 def init_cnfg():
@@ -131,7 +132,8 @@ def init_cnfg():
     if hasattr( cnfg, 'detail' ):       prmpt.detail    = cnfg.detail
 
     # pass the configuration object to module complete.py
-    cmplt.cnfg       = cnfg
+    cmplt.cnfg      = cnfg
+    save_res.cnfg   = cnfg
 
 
 def archive():
@@ -145,6 +147,7 @@ def archive():
                 "prompt.py",
                 "load_cnfg.py",
                 "models.py",
+                "save_res.py",
                 "complete.py" ]
 
     if cnfg.CONFIG is not None:
@@ -155,136 +158,6 @@ def archive():
     for jfile in jfiles:
         jfile   = os.path.join( dir_json, jfile )
         shutil.copy( jfile, exec_data )
-
-
-
-# ===================================================================================================================
-#
-#   Functions to write the results on file
-#   - write_header
-#   - write_content
-#   - write_results
-#
-# ===================================================================================================================
-
-def write_header( fstream ):
-    """
-    Write the initial part of the log file with info about the execution command and parameters
-
-    params:
-        fstream     [TextIOWrapper] text stream of the output file
-    """
-    # write the command that executed the program
-    command     = sys.executable + " " + " ".join( sys.argv )
-    host        = platform.node()
-    fstream.write( 60 * "=" + "\n\n" )
-    fstream.write( "executing:\n" + command )
-    fstream.write( "\non host " + host + "\n\n" )
-
-    # write info on config parameters
-    fstream.write( 60 * "=" + "\n\n" )
-    fstream.write( str( cnfg ) )
-    fstream.write( "\n" + 60 * "=" + "\n\n" )
-
-
-def write_content( fstream, prompt, completions ):
-    """
-    Write the content of prompts and completions on the log file
-
-    params:
-        fstream     [TextIOWrapper] text stream of the output file
-        prompt      [list] of dialog messages
-        completions [list] of [str]
-    """
-    for p in prompt:
-        fstream.write( f"ROLE: {p['role']}\n" )
-        fstream.write( f"PROMPT:\n{p['content']}\n\n" )
-
-    for i, c in enumerate( completions ):
-        fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
-        # fstream.write( f"COMPLETION #{i:3d}:\n{c}\n\n" )
-
-
-def write_results( fstream, prompts, completions, results, img_names ):
-    """
-    Write stats about the results and then the log of all dialogs
-
-    params:
-        fstream     [TextIOWrapper] text stream of the output file
-        prompt      [list] of prompts
-        completions [list] of completions
-        results     [dict] of scores per news
-        img_names   [list] of image names
-    """
-    question        = cnfg.dialogs[ -1 ]    # the stats are about only the last prompt question
-    all_n           = 0
-    fstream.write( f"Results for question {question}:\n" )
-    fstream.write( '\nItem\t\tFraction of "yes"\n' )
-
-    # stats for executions using news with AND without images
-    if cnfg.experiment == "both":
-        all_res_img     = []
-        all_res_noi     = []
-        fstream.write( '\t\twith image\twithout\n' )
-        res_img         = results[ "with_img" ]
-        res_noi         = results[ "no_img" ]
-        k_items         = list( res_img.keys() )
-        k_items.sort()
-        for k  in k_items:
-            r_i         = res_img[ k ]
-            r_n         = res_noi[ k ]
-            n           = len( r_n )
-            if not n:
-                fstream.write( f"{k:>3}\t\t0.00\t\t0.00\n" )
-            else:
-                yi      = r_i.sum() / n
-                yn      = r_n.sum() / n
-                all_n   += n
-                all_res_img.append( yi )
-                all_res_noi.append( yn )
-                fstream.write( f"{k:>3}\t\t{yi:4.2f}\t\t{yn:4.2f}\n" )
-
-        all_res_img     = np.array( all_res_img )
-        mean_img        = all_res_img.mean()
-        std_img         = all_res_img.std()
-        all_res_noi     = np.array( all_res_noi )
-        mean_noi        = all_res_noi.mean()
-        std_noi         = all_res_noi.std()
-        fstream.write( f"\nmean [std]:\t{mean_img:4.2f} [{std_img:4.2f}]\t{mean_noi:4.2f} [{std_noi:4.2f}]\n" )
-
-    # stats for executions using news with OR without images
-    else:
-        all_res         = []
-        k_items         = list( results.keys() )
-        k_items.sort()
-        for k  in k_items:
-            res         = results[ k ]
-            n           = len( res )
-            if not n:
-                fstream.write( f"{k:>3}\t\t0.00\n" )
-            else:
-                r       = res.sum() / n
-                all_n   += n
-                all_res.append( r )
-                fstream.write( f"{k:>3}\t\t{r:4.2f}\n" )
-
-        all_res         = np.array( all_res )
-        mean            = all_res.mean()
-        std             = all_res.std()
-        fstream.write( f"\nmean: {mean:5.2f}\tstd: {std:5.2f}\n" )
-
-    # log of all dialogs
-    fstream.write( "\n" + 60 * "=" + "\n" )
-    news_list   = cnfg.news_ids
-    if cnfg.experiment == "both":
-        news_list   += cnfg.news_ids
-    for i, pr, compl, name in zip( news_list, prompts, completions, img_names ):
-        if len( name ):
-            fstream.write( f"\n---------------- News {i} with image {name} -----------------\n\n" )
-        else:
-            fstream.write( f"\n------------------- News {i} with no image -------------------\n\n" )
-        write_content( fstream, pr, compl )
-        fstream.write( 60 * "=" + "\n" )
 
 
 
@@ -379,35 +252,35 @@ def do_exec():
     return:     True if execution is succesful
     """
     fstream         = open( exec_log, 'w', encoding="utf-8" )   # open the log file
-    write_header( fstream )
+    save_res.write_header( fstream )
 
     match cnfg.experiment:
 
         case "news_noimage":
-            pr, compl, res, names   = ask_news( with_img=False )
-            write_results( fstream, pr, compl, res, names )
-            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
-                pickle.dump( ( res ), f )
+            pr, compl, res, names           = ask_news( with_img=False )
+            save_res.write_dialogs( fstream, pr, compl, res, names )
+            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
+            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case "news_image":
-            pr, compl, res, names   = ask_news( with_img=True )
-            write_results( fstream, pr, compl, res, names )
-            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
-                pickle.dump( ( res ), f )
+            pr, compl, res, names           = ask_news( with_img=True )
+            save_res.write_dialogs( fstream, pr, compl, res, names )
+            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
+            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case "both":
             pr_img, com_img, res_img, n_i   = ask_news( with_img=True )
             pr_noi, com_noi, res_noi, n_n   = ask_news( with_img=False )
-            prompts                         = pr_img + pr_noi
-            completions                     = com_img + com_noi
+            pr                              = pr_img + pr_noi
+            compl                           = com_img + com_noi
             names                           = n_i + n_n
-            results                         = { "with_img": res_img, "no_img": res_noi }
-            write_results( fstream, prompts, completions, results, names )
-            with open( exec_file, 'wb' ) as f:                  # save raw results in pickle file
-                pickle.dump( ( results ), f )
+            res                             = { "with_img": res_img, "no_img": res_noi }
+            save_res.write_dialogs( fstream, pr, compl, res, names )
+            save_res.write_pickle( exec_pkl, res )             # save raw results in pickle file
+            save_res.write_stats( exec_pkl, exec_csv )         # save stats in csv file
 
         case _:
-            print( f"WARNING: experiment '{cnfg.experiment}' not implemented" )
+            print( f"ERROR: experiment '{cnfg.experiment}' not implemented" )
             return None
 
     fstream.close()
