@@ -2,16 +2,16 @@
     {
         "id": "f001",
         "image": "f001.jpg",
-        "real": 0,
+        "true": 0,
         "content": "After a legal victory, Tesla CEO and Taylor Swift toured the production lines of Stop Watt. They shed light on how this game-changing device is giving seniors financial relief while promoting a cleaner future, proving unstoppable against power companies’ resistance.",
         "source": "a Facebook post",
-        "more": "The post was shared 65 times.",
+        "more": "The post was shared 65 times and is from an account with 7 followers.",
         "url": "https://www.politifact.com/factchecks/2024/dec/13/facebook-posts/fakers-gonna-fake-no-taylor-swift-and-elon-musk-ar/"
     },
     {
         "id": "f002",
         "image": "f002.jpg",
-        "real": 0,
+        "true": 0,
         "content": "NEWS: The #Pentagon has confirmed that the mysterious #drones appearing across the globe are NOT of earthly origin. They are not foreign adversaries—these #UFOs are operating freely across our skies, even hovering over military bases and nuclear sites. 🌍 With the ability to bypass Earth’s defenses, the question remains: What are they?",
         "source": "an Instagram post",
         "more": "The post is from an account with 232,000 followers.",
@@ -20,7 +20,7 @@
     {
         "id": "f003",
         "image": "f003.jpg",
-        "real": 0,
+        "true": 0,
         "content": "The famed ship at the bottom of the North Atlantic is actually NOT The Titanic. It is her near-identical sister ship The Olympic. She was switched out last minute, as part of a MASSIVE insurance fraud scheme involving The White Star Line and J.P. Morgan.",
         "source": "a Facebook post",
         "more": "",
@@ -29,7 +29,7 @@
     {
         "id": "f004",
         "image": "f004.jpg",
-        "real": 0,
+        "true": 0,
         "content": "The true nature of cancer is a parasite, hence why, Ivermectin, in conjunction with mebendazole, and (fenbendazole) is so effective. It targets the parasite, not the whole body, like in chemo.",
         "source": "a Facebook post",
         "more": "The post was shared 23 times.",
@@ -38,7 +38,7 @@
     {
         "id": "f005",
         "image": "f005.jpg",
-        "real": 0,
+        "true": 0,
         "content": "Donald Trump has officially banned same-sex marriage in all 50 states in America. This is a practice that Donald Trump has officially banned in all 50 states in America and any person caught in the act faces a jail term. The only genders recognized by the USA government are male and female.",
         "source": "a Facebook post",
         "more": "",
@@ -47,7 +47,7 @@
     {
         "id": "f006",
         "image": "f006.jpg",
-        "real": 0,
+        "true": 0,
         "content": "McDonald’s offered 850 million to Robert F. Kennedy Jr. for hush money related to its frying oil",
         "source": "an Instagram post",
         "more": "The post is from an account with 17,000 followers.",
@@ -56,7 +56,7 @@
     {
         "id": "f007",
         "image": "f007.jpg",
-        "real": 0,
+        "true": 0,
         "content": "Breaking news: \"The era of King Charles has ended\" – Buckingham Palace raises the white flag, William’s heartbreaking announcement leaves the UK in mourning",
         "source": "a Facebook post",
         "more": "",
@@ -65,28 +65,118 @@
     {
         "id": "f008",
         "image": "f008.jpg",
-        "real": 0,
+        "true": 0,
         "content": "Elon Musk’s Starlink technology manipulated votes in the 2024 election to benefit Donald Trump. Musk’s Starlink uploaded votes in swing states. Starlink satellites exploding, destroying evidence.",
         "source": "a Threads post",
-        "more": "The post was shared 335 times.",
+        "more": "The post was shared 335 times and is from an account with 35,000 followers.",
         "url": "https://www.politifact.com/factchecks/2024/nov/12/threads-posts/no-elon-musks-starlink-wasnt-used-to-rig-the-2024/"
     },
     {
         "id": "f009",
         "image": "f009.jpg",
-        "real": 0,
+        "true": 0,
         "content": "BREAKING: CCTV captures the moment a Trump voter in Wisconsin is assaulted by two Kamala Harris thugs at a voting station.",
         "source": "an X post",
-        "more": "The post was shared 11 times.",
+        "more": "The post was shared 11 times and is from an account with 26,000 followers.",
         "url": "https://www.politifact.com/factchecks/2024/nov/07/tweets/video-showing-trump-voter-assaulted-in-wisconsin-l/"
     },
     {
         "id": "f010",
         "image": "f010.jpg",
-        "real": 0,
+        "true": 0,
         "content": "Vice President Kamala Harris and husband Doug Emhoff received $500,000 for tipping off Sean \"Diddy\" Combs about police raids.",
         "source": "an article on PatriotVoiceNews.com.",
         "more": "",
         "url": "https://www.politifact.com/factchecks/2024/nov/02/patriot-voice/in-another-sign-of-russian-influence-posts-falsely/"
+    },
+    {
+        "id": "t001",
+        "image": "t001.jpg",
+        "true": 1,
+        "content": "Rep. Sara Jacobs says that government shutdowns in 2013 and 2018 led by House Republicans cost our economy billions of dollars each.",
+        "source": "an X post",
+        "more": "The post was shared 137 times and is from an account with 37,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/dec/19/sara-jacobs/fact-check-past-government-shutdowns-cost-billions/"
+    },
+    {
+        "id": "t002",
+        "image": "t002.jpg",
+        "true": 1,
+        "content": "Project 2025 would cut the Federal Emergency Management Agency and kill federal-backed flood insurance.",
+        "source": "a Threads post",
+        "more": "The post was shared 371 times and is from an account with 100,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/oct/03/social-media/would-project-2025-cut-fema-proposals-would-reduce/"
+    },
+    {
+        "id": "t003",
+        "image": "t003.jpg",
+        "true": 1,
+        "content": "Under federal law, former President Donald Trump’s felony convictions mean he can no longer possess guns.",
+        "source": "an X post",
+        "more": "The post was shared 66 times and is from an account with 46,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/may/31/social-media/does-trumps-felony-conviction-bar-him-from-owning/"
+    },
+    {
+        "id": "t004",
+        "image": "t004.jpg",
+        "true": 1,
+        "content": "The United States is an outlier, one of only about half a dozen countries, without any guarantee of paid leave for new parents and/or other health care needs.",
+        "source": "an X post",
+        "more": "The post was shared 3 times and is from an account with 2,700 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/apr/16/lisa-subeck/its-true-the-us-is-an-outlier-on-paid-parental-lea/"
+    },
+    {
+        "id": "t005",
+        "image": "t005.jpg",
+        "true": 1,
+        "content": "Sen. Kirsten Gillibrand says marijuana is currently classified in the same category of drugs as heroin and a more dangerous category than fentanyl or cocaine.",
+        "source": "a newsletter with constituents",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/feb/20/kirsten-gillibrand/yes-the-federal-government-still-classifies-mariju/"
+    },
+    {
+        "id": "t006",
+        "image": "t006.jpg",
+        "true": 1,
+        "content": "Sen. Chris Larson says expanding Medicaid in Wisconsin would save the state $530 million, which could pay for 3,287 K-12 teachers, or 7.8 educators per district.",
+        "source": "an X post",
+        "more": "The post was shared 5 times and is from an account with 13,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/feb/16/chris-larson/if-the-state-expanded-medicaid-could-wisconsin-hir/"
+    },
+    {
+        "id": "t007",
+        "image": "t007.jpg",
+        "true": 1,
+        "content": "Under Joe Biden, there are record numbers of new Black entrepreneurs.",
+        "source": "a campaign ad",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/feb/15/joe-biden/has-black-entrepreneurship-hit-a-record-during-joe/"
+    },
+    {
+        "id": "t008",
+        "image": "t008.jpg",
+        "true": 1,
+        "content": "Sen. Tammy Baldwin says Wisconsin had over 1,400 opioid overdose deaths in 2022.",
+        "source": "an X post",
+        "more": "The post was shared 19 times and is from an account with 147,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/feb/06/tammy-baldwin/yes-there-were-over-1400-opioid-related-deaths-in/"
+    },
+    {
+        "id": "t009",
+        "image": "t009.jpg",
+        "true": 1,
+        "content": "Vice President Kamala Harris says postpartum Medicaid coverage expanded from three states to 43 states because of the Biden administration.",
+        "source": "an interview with Univision Noticias",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/feb/08/kamala-harris/fact-checking-kamala-harris-did-the-biden-administ/"
+    },
+    {
+        "id": "t010",
+        "image": "t010.jpg",
+        "true": 1,
+        "content": "Lego donates model MRI kits to hospitals to help children understand the procedure and reduce their anxiety.",
+        "source": "an Instagram post",
+        "more": "The post is from an account with 97,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2023/oct/18/instagram-posts/good-enough-to-be-true-lego-donated-model-mri-scan/"
     }
 ]

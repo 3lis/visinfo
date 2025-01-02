@@ -67,7 +67,7 @@ def write_stats( fcsv, fpkl=None, results=None ):
 
     # stats for executions using news with AND without images
     if "with_img" in results and "no_img" in results:
-        csv_header      += [ "Fraction of YES (img+txt)", "Fraction of YES (txt)" ]
+        csv_header      += [ "YES (img+txt)", "YES (txt)" ]
         all_res_img     = results[ "with_img" ]
         all_res_txt     = results[ "no_img" ]
         res_img         = []
