@@ -9,8 +9,8 @@
 │   ├── .key.txt (OpenAI API key)
 │   ├── dialogs.json
 │   └── news.json
-├── imgs (contains .jpg files)
-├── res (contains folders of results)
+├── imgs (contains JPG files)
+├── res (results are saved here)
 └── src
     ├── complete.py
     ├── load_cnfg.py
