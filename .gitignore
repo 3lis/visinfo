@@ -9,3 +9,6 @@ src/cfg_[0-9]*.py
 *.tgz
 *.swp
 /imgs
+/imgs_all
+src/cfg_lv.py
+src/cfg_oa.py

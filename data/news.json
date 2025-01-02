@@ -1,30 +1,92 @@
 [
     {
-        "id": 1,
-        "title": "Assassination attempt on Trump at the Golf Club",
-        "content": "The suspect had concealed himself in dense shrubbery near the golf course perimeter, close to a vantage point overlooking an open area. After being spotted, the suspect fled, leaving behind key evidence in the bushes, including his weapon and other items. Authorities recovered an SKS-style rifle with a mounted scope near the bushes, as well as two rucksacks containing survival gear, ammunition, and a GoPro camera.",
-        "real": 1,
-        "image": "001.jpg"
-    },
-    {
-        "id": 2,
-        "title": "Trump Reveals He Made a Secret Deal with Aliens During His Presidency",
-        "content": "According to an anonymous source, Donald Trump allegedly admitted to signing a secret treaty with extraterrestrial beings to secure advanced technology. The report claims this was part of a covert operation led by Area 51. The source further alleges that the aliens demanded gold and rare minerals in exchange for their assistance.",
+        "id": "f001",
+        "image": "f001.jpg",
         "real": 0,
-        "image": "002.jpg"
+        "content": "After a legal victory, Tesla CEO and Taylor Swift toured the production lines of Stop Watt. They shed light on how this game-changing device is giving seniors financial relief while promoting a cleaner future, proving unstoppable against power companies’ resistance.",
+        "source": "a Facebook post",
+        "more": "The post was shared 65 times.",
+        "url": "https://www.politifact.com/factchecks/2024/dec/13/facebook-posts/fakers-gonna-fake-no-taylor-swift-and-elon-musk-ar/"
     },
     {
-        "id": 3,
-        "title": "\"Birds Aren't Real\" Movement Gains Popularity",
-        "content": "The \"Birds Aren't Real\" movement, a satirical campaign claiming that birds have been replaced by government surveillance drones, has gained traction among younger audiences. While some initially mistake the movement for a genuine belief system, its creators emphasize that the campaign serves as a form of social commentary on the importance of critical thinking and media literacy in the digital age.",
-        "real": 1,
-        "image": "003.jpg"
-    },
-    {
-        "id": 4,
-        "title": "Top Scientists Expose Climate Change as a Hoax: Secret Documents Reveal Global Conspiracy",
-        "content": "A recent leaked report claims that climate change is a fabrication orchestrated by world governments to enforce new taxes and regulations. According to the article, scientists from Imperial College London have admitted in private communications that rising temperatures and melting ice caps are fabricated data. The report alleges that organizations like the United Nations are using climate fear-mongering to control populations and implement a \"New World Order\". The article also points to cold weather events as evidence disproving global warming.",
+        "id": "f002",
+        "image": "f002.jpg",
         "real": 0,
-        "image": "004.jpg"
+        "content": "NEWS: The #Pentagon has confirmed that the mysterious #drones appearing across the globe are NOT of earthly origin. They are not foreign adversaries—these #UFOs are operating freely across our skies, even hovering over military bases and nuclear sites. 🌍 With the ability to bypass Earth’s defenses, the question remains: What are they?",
+        "source": "an Instagram post",
+        "more": "The post is from an account with 232,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/dec/16/instagram-posts/social-media-claims-about-new-jersey-drones-are-ou/"
+    },
+    {
+        "id": "f003",
+        "image": "f003.jpg",
+        "real": 0,
+        "content": "The famed ship at the bottom of the North Atlantic is actually NOT The Titanic. It is her near-identical sister ship The Olympic. She was switched out last minute, as part of a MASSIVE insurance fraud scheme involving The White Star Line and J.P. Morgan.",
+        "source": "a Facebook post",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/dec/04/facebook-posts/the-ship-resting-at-the-bottom-of-the-atlantic-is/"
+    },
+    {
+        "id": "f004",
+        "image": "f004.jpg",
+        "real": 0,
+        "content": "The true nature of cancer is a parasite, hence why, Ivermectin, in conjunction with mebendazole, and (fenbendazole) is so effective. It targets the parasite, not the whole body, like in chemo.",
+        "source": "a Facebook post",
+        "more": "The post was shared 23 times.",
+        "url": "https://www.politifact.com/factchecks/2024/dec/30/facebook-posts/no-cancer-is-not-a-parasite-and-ivermectin-cant-cu/"
+    },
+    {
+        "id": "f005",
+        "image": "f005.jpg",
+        "real": 0,
+        "content": "Donald Trump has officially banned same-sex marriage in all 50 states in America. This is a practice that Donald Trump has officially banned in all 50 states in America and any person caught in the act faces a jail term. The only genders recognized by the USA government are male and female.",
+        "source": "a Facebook post",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/nov/26/facebook-posts/no-donald-trump-has-not-officially-banned-same-sex/"
+    },
+    {
+        "id": "f006",
+        "image": "f006.jpg",
+        "real": 0,
+        "content": "McDonald’s offered 850 million to Robert F. Kennedy Jr. for hush money related to its frying oil",
+        "source": "an Instagram post",
+        "more": "The post is from an account with 17,000 followers.",
+        "url": "https://www.politifact.com/factchecks/2024/nov/19/instagram-posts/mcdonalds-didnt-offer-850-million-to-keep-rfk-jr-f/"
+    },
+    {
+        "id": "f007",
+        "image": "f007.jpg",
+        "real": 0,
+        "content": "Breaking news: \"The era of King Charles has ended\" – Buckingham Palace raises the white flag, William’s heartbreaking announcement leaves the UK in mourning",
+        "source": "a Facebook post",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/nov/13/facebook-posts/no-king-charles-iii-hasnt-died-and-buckingham-pala/"
+    },
+    {
+        "id": "f008",
+        "image": "f008.jpg",
+        "real": 0,
+        "content": "Elon Musk’s Starlink technology manipulated votes in the 2024 election to benefit Donald Trump. Musk’s Starlink uploaded votes in swing states. Starlink satellites exploding, destroying evidence.",
+        "source": "a Threads post",
+        "more": "The post was shared 335 times.",
+        "url": "https://www.politifact.com/factchecks/2024/nov/12/threads-posts/no-elon-musks-starlink-wasnt-used-to-rig-the-2024/"
+    },
+    {
+        "id": "f009",
+        "image": "f009.jpg",
+        "real": 0,
+        "content": "BREAKING: CCTV captures the moment a Trump voter in Wisconsin is assaulted by two Kamala Harris thugs at a voting station.",
+        "source": "an X post",
+        "more": "The post was shared 11 times.",
+        "url": "https://www.politifact.com/factchecks/2024/nov/07/tweets/video-showing-trump-voter-assaulted-in-wisconsin-l/"
+    },
+    {
+        "id": "f010",
+        "image": "f010.jpg",
+        "real": 0,
+        "content": "Vice President Kamala Harris and husband Doug Emhoff received $500,000 for tipping off Sean \"Diddy\" Combs about police raids.",
+        "source": "an article on PatriotVoiceNews.com.",
+        "more": "",
+        "url": "https://www.politifact.com/factchecks/2024/nov/02/patriot-voice/in-another-sign-of-russian-influence-posts-falsely/"
     }
 ]

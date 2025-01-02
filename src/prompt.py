@@ -29,6 +29,7 @@ detail                  = "high"                    # parameter for OpenAI image
 #   - image_pil
 #   - image_b64
 #   - get_dialog
+#   - get_news
 #
 # ===================================================================================================================
 
@@ -41,7 +42,7 @@ def list_news():
     fname   = os.path.join( dir_json, f_news )
     with open( fname, 'r' ) as f:
         data    = json.load( f )
-    ids     = [ int( d[ 'id' ] ) for d in data ]
+    ids     = [ d[ 'id' ] for d in data ]
 
     return ids
 
@@ -58,7 +59,7 @@ def image_pil( i ):
     fname   = os.path.join( dir_json, f_news )
     with open( fname, 'r' ) as f:
         data    = json.load( f )
-    ids     = [ int( d[ 'id' ] ) for d in data ]
+    ids     = [ d[ 'id' ] for d in data ]
 
     try:
         idx     = ids.index( i )
@@ -108,6 +109,31 @@ def get_dialog( i ):
         print( f"ERROR: non existing dialog '{i}' in get_dialog()" )
         raise e
     text    = data[ idx ][ "content" ]
+    return text
+
+
+def get_news( news, source=False, more=False ):
+    """
+    Return the formatted textual description of a news
+
+    params:
+        news    [dict] as extracted from the JSON file
+        source  [bool] add info about the source of the news
+        more    [bool] add more available info about the news, like number of share/followers
+
+    return:     [str] text content of the news
+    """
+    c           = news[ "content" ]
+    s           = news[ "source" ]
+    m           = news[ "more" ]
+    text        = ""
+
+    if source:
+        text    += f"The news comes from {s}."
+    if more and len( m ) > 0:
+        text    += f" {m}"
+    text    += f"\n{c}"
+
     return text
 
 
@@ -164,7 +190,7 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
     fname   = os.path.join( dir_json, f_news )
     with open( fname, 'r' ) as f:
         data    = json.load( f )
-    ids     = [ int( d[ 'id' ] ) for d in data ]
+    ids     = [ d[ 'id' ] for d in data ]
 
     try:
         idx     = ids.index( news_id )
@@ -173,11 +199,9 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
         raise e
 
     news                = data[ idx ]
-    title               = news[ "title" ]
-    text                = news[ "content" ]
+    text                = get_news( news, source=True, more=True )
     fimage              = news[ "image" ] if with_img else ''
-
-    full_text           = f"{pre}\n{title} - {text}\n{post}"
+    full_text           = f"{pre}\n{text}\n{post}"
 
     if interface == "openai":
         # OpenAI with image included as string in the prompt

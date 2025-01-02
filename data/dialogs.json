@@ -12,6 +12,6 @@
     {
         "id": "ask_share",
         "descr": "ask for willingness to share",
-        "content": "Do you want to share this news with your friends? Start your answer with YES or NO, and then explain your reasoning."
+        "content": "Do you want to repost and share this news with your friends? Start your answer with YES or NO, and then explain your reasoning."
     }
 ]
