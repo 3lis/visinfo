@@ -226,7 +226,15 @@ def ask_news( with_img=True ):
             i_mode      = "with image" if with_img  else "without image"
             print( f"==========> Processing news {n} {i_mode} <==========" )
 
-        pr, name        = prmpt.prompt_news( n, interface=cnfg.interface, pre=pre, post=post, with_img=with_img )
+        pr, name        = prmpt.prompt_news(
+                            n,
+                            interface   = cnfg.interface,
+                            pre         = pre,
+                            post        = post,
+                            with_img    = with_img,
+                            source      = cnfg.info_source,
+                            more        = cnfg.info_more,
+        )
 
         # using OpenAI
         if cnfg.interface == "openai":

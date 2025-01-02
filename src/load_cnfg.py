@@ -34,7 +34,10 @@ class Config( object ):
     max_tokens              [int] maximum number of tokens (overwritten by MAXTOKENS)
     top_p                   [int] probability mass of tokens generated in completion (default=1)
     temperature             [float] sampling temperature during completion (default=1.0)
-    news_ids                [list] numbers of news to process
+    news_ids                [list] ids of news to process
+    info_source             [bool] add info about the source of the news
+    info_more               [bool] add more available info about the news, like number of share/followers
+
     """
 
     def load_from_line( self, line_kwargs ):
@@ -62,7 +65,7 @@ class Config( object ):
         if not hasattr( self, 'news_ids' ):
             self.news_ids           = []
         if not hasattr( self, 'dialogs' ):
-            self.init_dialog        = [ "prologue_1", "ask_reliability" ]
+            self.init_dialog        = [ "prologue_1", "ask_share" ]
         if not hasattr( self, 'model_id' ):
             self.model_id           = 0
         if not hasattr( self, 'n_returns' ):
@@ -72,7 +75,11 @@ class Config( object ):
         if not hasattr( self, 'top_p' ):
             self.top_p              = 1
         if not hasattr( self, 'temperature' ):
-            self.temperature        = 1.0
+            self.temperature        = 0.3
+        if not hasattr( self, 'info_source' ):
+            self.info_source        = False
+        if not hasattr( self, 'info_more' ):
+            self.info_more          = False
 
 
     def __str__( self ):

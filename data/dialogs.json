@@ -2,7 +2,7 @@
     {
         "id": "prologue_1",
         "descr": "a generic prologue suggesting a role as news reader and evaluator",
-        "content": "You are roleplaying as a person on a social network, and one of your friends shares the following news."
+        "content": "You are roleplaying as a person on a social network. One of your friends shares the following news, which might be true or fake."
     },
     {
         "id": "ask_true",

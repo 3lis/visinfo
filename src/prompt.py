@@ -132,7 +132,10 @@ def get_news( news, source=False, more=False ):
         text    += f"The news comes from {s}."
     if more and len( m ) > 0:
         text    += f" {m}"
-    text    += f"\n{c}"
+    if source or more:
+        text    += "\n"
+
+    text    += f"\n{c}\n"
 
     return text
 
@@ -171,7 +174,7 @@ def prune_prompt( prompt ):
     return pruned
 
 
-def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
+def prompt_news( news_id, interface="openai", pre="", post="", with_img=True, source=False, more=False ):
     """
     Compose the prompt to process one news.
     For OpenAI interface, the image is passed within the prompt.
@@ -183,6 +186,8 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
         pre         [str] optional text before the news content
         post        [str] optional text after the news content
         with_img    [bool] combine the news with the image
+        source      [bool] add info about the source of the news
+        more        [bool] add more available info about the news, like number of share/followers
 
     return:         [list] the prompt
                     [str] image name or "" if not with_img
@@ -199,7 +204,7 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True ):
         raise e
 
     news                = data[ idx ]
-    text                = get_news( news, source=True, more=True )
+    text                = get_news( news, source=source, more=more )
     fimage              = news[ "image" ] if with_img else ''
     full_text           = f"{pre}\n{text}\n{post}"
 
