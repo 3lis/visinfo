@@ -26,7 +26,8 @@ class Config( object ):
 
     Configuration file parameters:
     detail                  [str] detail parameter for OpenAI image handling: "high", "low", "auto"
-    dialogs                 [list] an arbitrary list of dialog titles, the first and the last are always used
+    dialogs_pre             [list or str] dialog ids to instert before the news
+    dialogs_post            [list or str] dialog ids to instert after the news
     f_dialog                [str] filename of json file with dialogs
     f_news                  [str] filename of json file with the news
     model_id                [int] index in the list of possible models (overwritten by MODEL)
@@ -64,8 +65,10 @@ class Config( object ):
 
         if not hasattr( self, 'news_ids' ):
             self.news_ids           = []
-        if not hasattr( self, 'dialogs' ):
-            self.init_dialog        = [ "prologue_1", "ask_share" ]
+        if not hasattr( self, 'dialogs_pre' ):
+            self.dialogs_pre        = ""
+        if not hasattr( self, 'dialogs_post' ):
+            self.dialogs_post       = ""
         if not hasattr( self, 'model_id' ):
             self.model_id           = 0
         if not hasattr( self, 'n_returns' ):
@@ -119,15 +122,6 @@ def read_args():
             type            = str,
             default         = None,
             help            = "Name of configuration file (without path nor extension)"
-    )
-    parser.add_argument(
-            '-d',
-            '--dialog',
-            action          = 'store',
-            dest            = 'DIALOG',
-            type            = list,
-            default         = None,
-            help            = "list of dialogs"
     )
     parser.add_argument(
             '-D',

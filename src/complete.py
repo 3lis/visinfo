@@ -162,15 +162,19 @@ def complete_hf( prompt, image ):
             return_tensors  = "pt"
         ).to( model.device, torch.float16 )
 
+    # to suppress annoying print
+    model.generation_config.pad_token_id = model.generation_config.eos_token_id
+
     # NOTE: for the list of arguments see the general documentation for Generation
     # https://huggingface.co/docs/transformers/v4.35.2/en/main_classes/text_generation
     out         = model.generate(
             **inputs,
             max_new_tokens          = cnfg.max_tokens,
-            do_sample               = True,                 # NOTE: the default is greedy!
+            do_sample               = True,                     # NOTE: the default is greedy!
             num_return_sequences    = cnfg.n_returns,
             top_p                   = cnfg.top_p,
-            temperature             = cnfg.temperature
+            temperature             = cnfg.temperature,
+            # pad_token_id            = tokenizer.eos_token_id    # to suppress annoying print
         )
     res         = processor.batch_decode( out, skip_special_tokens=True )
     completions = [ r.split( "[/INST]" )[ -1 ].strip() for r in res ]

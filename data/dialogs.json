@@ -1,17 +1,22 @@
 [
     {
-        "id": "prologue_1",
-        "descr": "a generic prologue suggesting a role as news reader and evaluator",
-        "content": "You are roleplaying as a person on a social network. One of your friends shares the following news, which might be true or fake."
+        "id": "profile_simple",
+        "content": "You are roleplaying as a person on a social network."
+    },
+    {
+        "id": "context_simple",
+        "content": "One of your friends shares the following news, which might be true or fake."
+    },
+    {
+        "id": "ask_img",
+        "content": "Describe the image you see and how is linked to the news."
     },
     {
         "id": "ask_true",
-        "descr": "ask for truthful",
         "content": "Do you believe this news is truthful? Start your answer with YES or NO, and then explain your reasoning."
     },
     {
         "id": "ask_share",
-        "descr": "ask for willingness to share",
         "content": "Do you want to repost and share this news with your friends? Start your answer with YES or NO, and then explain your reasoning."
     }
 ]

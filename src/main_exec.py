@@ -106,14 +106,14 @@ def init_cnfg():
         cnfg.max_tokens     = 50                            # afew tokens
         cnfg.top_p          = 1                             # set a reasonable default
         cnfg.temperature    = 0.3                           # set a reasonable default
-        cnfg.dialogs        = []                            # set a reasonable default
+        cnfg.dialogs_pre    = ""                            # set a reasonable default
+        cnfg.dialogs_post   = ""                            # set a reasonable default
         cnfg.news_ids       = []                            # set a reasonable default
 
     if not hasattr( cnfg, 'experiment' ):
         cnfg.experiment         = None                      # whether experiment uses images or not
 
     # overwrite command line arguments
-    if cnfg.DIALOG is not None:         cnfg.dialogs    = cnfg.DIALOG
     if cnfg.MAXTOKENS is not None:      cnfg.max_tokens = cnfg.MAXTOKENS
     if cnfg.MODEL is not None:          cnfg.model_id   = cnfg.MODEL
     if cnfg.NRETURNS is not None:       cnfg.n_returns  = cnfg.NRETURNS
@@ -209,28 +209,21 @@ def ask_news( with_img=True ):
     completions     = []        # initialize the list of completions
     scores          = dict()    # initialize the yes/not replies
     img_names       = []        # initialize the list of image names
-    pre             = ""        # optional preliminary dialog turn
-    post            = ""        # optional post dialog turn, typically a query
 
     if not len( cnfg.news_ids ):
         # use all news in file if not specified otherwise
         cnfg.news_ids   = prmpt.list_news()
 
-    if len( cnfg.dialogs ):
-        pre         = prmpt.get_dialog( cnfg.dialogs[ 0 ] )
-    if len( cnfg.dialogs ) > 1:
-        post        = prmpt.get_dialog( cnfg.dialogs[ -1 ] )
-
     for n in cnfg.news_ids:
         if cnfg.VERBOSE:
-            i_mode      = "with image" if with_img  else "without image"
+            i_mode      = "img + txt" if with_img else "only txt"
             print( f"==========> Processing news {n} {i_mode} <==========" )
 
-        pr, name        = prmpt.prompt_news(
+        pr, name        = prmpt.format_prompt(
                             n,
-                            interface   = cnfg.interface,
-                            pre         = pre,
-                            post        = post,
+                            cnfg.interface,
+                            pre         = cnfg.dialogs_pre,
+                            post        = cnfg.dialogs_post,
                             with_img    = with_img,
                             source      = cnfg.info_source,
                             more        = cnfg.info_more,

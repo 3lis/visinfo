@@ -111,8 +111,7 @@ def write_stats( fcsv, fpkl=None, results=None ):
         res     = np.array( res )
         mean    = res.mean()
         std     = res.std()
-        fstream.write( f"\nmean: {mean:5.2f}\tstd: {std:5.2f}\n" )
-        csv_rows.append( [  "mean [std]", f"{mean:.3f} [{std:.3f}]" ] )
+        csv_rows.append( [ "mean [std]", f"{mean:.3f} [{std:.3f}]" ] )
 
     with open( fcsv, mode='w', newline='' ) as f:
         w   = csv.writer( f )

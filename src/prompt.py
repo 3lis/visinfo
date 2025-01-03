@@ -145,7 +145,7 @@ def get_news( news, source=False, more=False ):
 #
 #   Functions composing prompts
 #   - prune_openai
-#   - prompt_news
+#   - format_prompt
 #
 # ===================================================================================================================
 
@@ -174,22 +174,19 @@ def prune_prompt( prompt ):
     return pruned
 
 
-def prompt_news( news_id, interface="openai", pre="", post="", with_img=True, source=False, more=False ):
+def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=False ):
     """
-    Compose the prompt to process one news.
-    For OpenAI interface, the image is passed within the prompt.
-    For HF interface, the image is passed separately in complete.py
+    Compose the text of a prompt processing one news
 
     params:
-        news        [int] the news item to test
-        interface   [str] "openai" or "hf"
-        pre         [str] optional text before the news content
-        post        [str] optional text after the news content
-        with_img    [bool] combine the news with the image
+        news        [str] id of the news
+        pre         [str] or [list of str] optional ids of text before the news content
+        post        [str] or [list of str] optional ids of text after the news content
+        with_img    [bool] the news contains an image
         source      [bool] add info about the source of the news
         more        [bool] add more available info about the news, like number of share/followers
 
-    return:         [list] the prompt
+    return:         [str] the prompt
                     [str] image name or "" if not with_img
     """
     fname   = os.path.join( dir_json, f_news )
@@ -200,13 +197,58 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True, so
     try:
         idx     = ids.index( news_id )
     except Exception as e:
-        print( f"ERROR: non existing news with ID {news_id} in prompt_news()" )
+        print( f"ERROR: non existing news with ID {news_id} in format_prompt()" )
         raise e
 
+    full_text           = ""
     news                = data[ idx ]
     text                = get_news( news, source=source, more=more )
     fimage              = news[ "image" ] if with_img else ''
-    full_text           = f"{pre}\n{text}\n{post}"
+
+    if isinstance( pre, list ):
+        for p in pre:
+            full_text   += f"{get_dialog( p )} "
+
+    elif isinstance( pre, str ):
+        full_text   += f"{get_dialog( pre )}"
+
+    full_text   += f"\n{text}\n"
+
+    if isinstance( post, list ):
+        for p in post:
+            full_text   += f"{get_dialog( p )} "
+    elif isinstance( post, str ):
+        full_text   += f"{get_dialog( post )}"
+
+    return full_text, fimage
+
+
+def format_prompt( news_id, interface, pre="", post="", with_img=True, source=False, more=False ):
+    """
+    Format the prompt for the language model.
+    For OpenAI interface, the image is passed within the prompt.
+    For HF interface, the image is passed separately in complete.py
+
+    params:
+        news        [str] id of the news
+        interface   [str] "openai" or "hf"
+        pre         [str] or [list of str] optional ids of text before the news content
+        post        [str] or [list of str] optional ids of text after the news content
+        with_img    [bool] the news contains an image
+        source      [bool] add info about the source of the news
+        more        [bool] add more available info about the news, like number of share/followers
+
+    return:         [list] the prompt
+                    [str] image name or "" if not with_img
+    """
+    full_text, fimage   = compose_prompt(
+                            news_id,
+                            pre         = pre,
+                            post        = post,
+                            with_img    = with_img,
+                            source      = source,
+                            more        = more
+    )
 
     if interface == "openai":
         # OpenAI with image included as string in the prompt
@@ -235,7 +277,7 @@ def prompt_news( news_id, interface="openai", pre="", post="", with_img=True, so
 
     elif interface == "hf":
         # HuggingFace with or without image
-        # NOTE currently huggingface has a bug that does not allow inference without an image (see complete.py)
+        # NOTE currently llava-next has a bug that does not allow inference without an image (see complete.py)
         img_content         = { "type": "image" }
         prompt      = [ {
             "role":     "user",
