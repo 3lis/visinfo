@@ -12,3 +12,4 @@ src/cfg_[0-9]*.py
 /imgs_all
 src/cfg_lv.py
 src/cfg_oa.py
+note.txt

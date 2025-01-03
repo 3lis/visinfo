@@ -89,12 +89,13 @@ def image_b64( fname ):
     return img_str
 
 
-def get_dialog( i ):
+def get_dialog( i, with_img ):
     """
     Return a single dialog from the JSON dataset
 
     params:
-        i       [str] ID of the dialog
+        i           [str] ID of the dialog
+        with_img    [bool] the news contains an image
 
     return:     [str] the dialog content
     """
@@ -108,7 +109,12 @@ def get_dialog( i ):
     except Exception as e:
         print( f"ERROR: non existing dialog '{i}' in get_dialog()" )
         raise e
-    text    = data[ idx ][ "content" ]
+
+    if with_img and "content_img" in data[ idx ]:
+        text    = data[ idx ][ "content_img" ]
+    else:
+        text    = data[ idx ][ "content" ]
+
     return text
 
 
@@ -207,18 +213,23 @@ def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=
 
     if isinstance( pre, list ):
         for p in pre:
-            full_text   += f"{get_dialog( p )} "
+            t           = get_dialog( p, with_img )
+            full_text   += f"{t} "
 
     elif isinstance( pre, str ):
-        full_text   += f"{get_dialog( pre )}"
+        t           = get_dialog( pre, with_img )
+        full_text   += f"{t} "
 
     full_text   += f"\n{text}\n"
 
     if isinstance( post, list ):
         for p in post:
-            full_text   += f"{get_dialog( p )} "
+            t           = get_dialog( p, with_img )
+            full_text   += f"{t} "
+
     elif isinstance( post, str ):
-        full_text   += f"{get_dialog( post )}"
+        t           = get_dialog( post, with_img )
+        full_text   += f"{t} "
 
     return full_text, fimage
 

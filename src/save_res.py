@@ -163,9 +163,8 @@ def write_dialog( fstream, prompt, completions ):
         fstream.write( f"ROLE: {p['role']}\n" )
         fstream.write( f"PROMPT:\n{p['content']}\n\n" )
 
-    fstream.write( 60 * "-" + "\n\n" )
-
     for i, c in enumerate( completions ):
+        fstream.write( 60 * "-" + "\n\n" )
         fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
 
 
@@ -186,9 +185,9 @@ def write_dialogs( fstream, prompts, completions, results, img_names ):
         news_list   += cnfg.news_ids
     for i, pr, compl, name in zip( news_list, prompts, completions, img_names ):
         if len( name ):
-            fstream.write( f"\n---------------- News {i} with image {name} -----------------\n\n" )
+            fstream.write( f"\n-------------- News {i} with image {name} ---------------\n\n" )
         else:
-            fstream.write( f"\n------------------- News {i} with no image -------------------\n\n" )
+            fstream.write( f"\n---------------- News {i} with no image -------------------\n\n" )
         write_dialog( fstream, pr, compl )
         fstream.write( 60 * "=" + "\n" )
 
