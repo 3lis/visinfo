@@ -20,8 +20,7 @@
     ├── save_res.py
     └── cfg_###.py (any config file)
 ```
-The image dataset used for testing is on 
-[Google Drive](https://drive.google.com/drive/folders/1KwwU-UvAk-UvJvLrW6u8OEmIwfDNvQ4q).
+Examples of `imgs` and `res` are on [Google Drive](https://drive.google.com/drive/folders/13mso0QZPu3A9fsY5-anVy0xuWAUOVcBu).
 
 To run the program, navigate to the `src` directory and execute a command like the following:
 ```
