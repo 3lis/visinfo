@@ -22,6 +22,11 @@
 ```
 Examples of `imgs` and `res` are on [Google Drive](https://drive.google.com/drive/folders/13mso0QZPu3A9fsY5-anVy0xuWAUOVcBu).
 
+To install the requirements, on the root folder of the project execute the following command:
+```
+$ pip install -r req.txt
+```
+
 To run the program, navigate to the `src` directory and execute a command like the following:
 ```
 $ python main_exec.py -c cfg_example
