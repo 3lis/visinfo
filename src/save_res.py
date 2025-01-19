@@ -165,7 +165,11 @@ def write_dialog( fstream, prompt, completions, mode="chat" ):
     elif mode == "chat":
         for p in prompt:
             fstream.write( f"ROLE: {p['role']}\n" )
-            fstream.write( f"PROMPT:\n{p['content']}\n\n" )
+            c   = p[ 'content' ]
+            if not isinstance( c, str ):
+                assert c[ 0 ][ 'type' ] == 'text', f"ERROR: unrecognized structure of completion '{c}'"
+                c   = c[ 0 ][ 'text' ]
+            fstream.write( f"PROMPT:\n{c}\n\n" )
     else:
         print( f"ERROR: mode '{mode}' not supported" )
         sys.exit()
