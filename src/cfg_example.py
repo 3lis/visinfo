@@ -1,5 +1,5 @@
 kwargs      = {
-    'model_id':         -1,                 # llava-next
+    'model_id':         7,                  # llava-next
     'experiment':       "both",             # news_image, news_noimage, both
     'dialogs_pre':      [ "intro_profile", "profile_moderate", "context_strict" ],
     'dialogs_post':     [ "ask_img", "ask_share_strict"],
