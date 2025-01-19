@@ -137,7 +137,7 @@ def read_args():
             dest            = 'MODEL',
             type            = int,
             default         = None,
-            help            = "index in the list of possible models (default=0)",
+            help            = "index in the list of possible models (default=0) (-1 to print all)",
     )
     parser.add_argument(
             '-M',

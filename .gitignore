@@ -13,3 +13,4 @@ src/cfg_[0-9]*.py
 src/cfg_lv.py
 src/cfg_oa.py
 note.txt
+src/show_models

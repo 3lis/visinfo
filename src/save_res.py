@@ -150,7 +150,7 @@ def write_header( fstream ):
     fstream.write( "\n" + 60 * "=" + "\n\n" )
 
 
-def write_dialog( fstream, prompt, completions ):
+def write_dialog( fstream, prompt, completions, mode="chat" ):
     """
     Write the content of prompts and completions on the log file
 
@@ -158,17 +158,24 @@ def write_dialog( fstream, prompt, completions ):
         fstream     [TextIOWrapper] text stream of the output file
         prompt      [list] of dialog messages
         completions [list] of [str]
+        mode        [str] "cmpl" or "chat"
     """
-    for p in prompt:
-        fstream.write( f"ROLE: {p['role']}\n" )
-        fstream.write( f"PROMPT:\n{p['content']}\n\n" )
+    if mode == "cmpl":
+        fstream.write( f"PROMPT:\n{prompt}\n\n" )
+    elif mode == "chat":
+        for p in prompt:
+            fstream.write( f"ROLE: {p['role']}\n" )
+            fstream.write( f"PROMPT:\n{p['content']}\n\n" )
+    else:
+        print( f"ERROR: mode '{mode}' not supported" )
+        sys.exit()
 
     for i, c in enumerate( completions ):
         fstream.write( 60 * "-" + "\n\n" )
         fstream.write( f"COMPLETION #{i}:\n{c}\n\n" )
 
 
-def write_dialogs( fstream, prompts, completions, results, img_names ):
+def write_dialogs( fstream, prompts, completions, results, img_names, mode="chat" ):
     """
     Write the log of all dialogs
 
@@ -178,6 +185,7 @@ def write_dialogs( fstream, prompts, completions, results, img_names ):
         completions [list] of completions
         results     [dict] of scores per news
         img_names   [list] of image names
+        mode        [str] "cmpl" or "chat"
     """
     fstream.write( "\n" + 60 * "=" + "\n" )
     news_list   = cnfg.news_ids
@@ -188,11 +196,11 @@ def write_dialogs( fstream, prompts, completions, results, img_names ):
             fstream.write( f"\n-------------- News {i} with image {name} ---------------\n\n" )
         else:
             fstream.write( f"\n---------------- News {i} with no image -------------------\n\n" )
-        write_dialog( fstream, pr, compl )
+        write_dialog( fstream, pr, compl, mode=mode )
         fstream.write( 60 * "=" + "\n" )
 
 
-def write_all( fstream, prompts, completions, results, img_names, fcsv, fpkl ):
+def write_all( fstream, prompts, completions, results, img_names, fcsv, fpkl, mode="chat" ):
     """
     Write all result files (text log, csv, pkl)
 
@@ -204,6 +212,7 @@ def write_all( fstream, prompts, completions, results, img_names, fcsv, fpkl ):
         img_names   [list] of image names
         fcsv        [str] csv file with path and extension
         fpkl        [str] pickle file with path and extension
+        mode        [str] "cmpl" or "chat"
     """
     write_pickle( fpkl, results )
     write_stats( fcsv, results=results )
@@ -215,4 +224,4 @@ def write_all( fstream, prompts, completions, results, img_names, fcsv, fpkl ):
         s   = r.read()
     fstream.write( s )
 
-    write_dialogs( fstream, prompts, completions, results, img_names )
+    write_dialogs( fstream, prompts, completions, results, img_names, mode=mode )

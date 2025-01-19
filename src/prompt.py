@@ -151,6 +151,7 @@ def get_news( news, source=False, more=False ):
 #
 #   Functions composing prompts
 #   - prune_openai
+#   - compose_prompt
 #   - format_prompt
 #
 # ===================================================================================================================
@@ -203,7 +204,7 @@ def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=
     try:
         idx     = ids.index( news_id )
     except Exception as e:
-        print( f"ERROR: non existing news with ID {news_id} in format_prompt()" )
+        print( f"ERROR: non existing news with ID {news_id} in compose_prompt()" )
         raise e
 
     full_text           = ""
@@ -234,7 +235,7 @@ def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=
     return full_text, fimage
 
 
-def format_prompt( news_id, interface, pre="", post="", with_img=True, source=False, more=False ):
+def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=True, source=False, more=False ):
     """
     Format the prompt for the language model.
     For OpenAI interface, the image is passed within the prompt.
@@ -243,6 +244,7 @@ def format_prompt( news_id, interface, pre="", post="", with_img=True, source=Fa
     params:
         news        [str] id of the news
         interface   [str] "openai" or "hf"
+        mode        [str] "cmpl" or "chat"
         pre         [str] or [list of str] optional ids of text before the news content
         post        [str] or [list of str] optional ids of text after the news content
         with_img    [bool] the news contains an image
@@ -262,6 +264,7 @@ def format_prompt( news_id, interface, pre="", post="", with_img=True, source=Fa
     )
 
     if interface == "openai":
+
         # OpenAI with image included as string in the prompt
         if with_img:
             image               = image_b64( fimage )
@@ -279,6 +282,7 @@ def format_prompt( news_id, interface, pre="", post="", with_img=True, source=Fa
                     img_content
                 ]
             } ]
+
         # OpenAI without image
         else:
             prompt      = [ {
@@ -286,17 +290,28 @@ def format_prompt( news_id, interface, pre="", post="", with_img=True, source=Fa
                 "content":  [ { "type": "text", "text": full_text } ]
             } ]
 
+    # HuggingFace with or without image (the image is handled in complete.py)
     elif interface == "hf":
-        # HuggingFace with or without image
-        # NOTE currently llava-next has a bug that does not allow inference without an image (see complete.py)
-        img_content         = { "type": "image" }
-        prompt      = [ {
-            "role":     "user",
-            "content":  [
-                { "type": "text", "text": full_text },
-                { "type": "image" }
-            ]
-        } ]
+
+        # NOTE currently llava-next has a bug that does not allow inference without an image
+        # therefore "chat" mode has just one option "with image"
+        if mode == "chat":
+            img_content = { "type": "image" }
+            prompt      = [ {
+                "role":     "user",
+                "content":  [
+                    { "type": "text", "text": full_text },
+                    img_content
+                ]
+            } ]
+
+        # for "cmpl" mode, the image is handled in complete.py
+        elif mode == "cmpl":
+            prompt      = full_text
+
+        else:
+            print( f"ERROR: mode '{mode}' not supported" )
+            sys.exit()
 
     else:
         print( f"ERROR: model interface '{interface}' not supported" )

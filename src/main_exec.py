@@ -94,6 +94,15 @@ def init_cnfg():
     line_kwargs     = load_cnfg.read_args()                 # read the arguments in the command line
     cnfg.load_from_line( line_kwargs )                      # and parse their value into the configuration obj
 
+    if cnfg.MODEL is not None and cnfg.MODEL < 0:
+        print( "ID    model                                 interface" )
+        for i, m in enumerate( models ):
+            f   = models_interface[ m ]
+            if len( m ) > 40:
+                m   = m[ : 26 ] + "<...>" + m[ -9 : ]
+            print( f"{i:>2d}   {m:<43}{f:<8}" )
+        sys.exit()
+
     # load parameters from configuration file
     if cnfg.CONFIG is not None:
         exec( "import " + cnfg.CONFIG )                     # exec the import statement
@@ -222,6 +231,7 @@ def ask_news( with_img=True ):
         pr, name        = prmpt.format_prompt(
                             n,
                             cnfg.interface,
+                            mode        = cnfg.mode,
                             pre         = cnfg.dialogs_pre,
                             post        = cnfg.dialogs_post,
                             with_img    = with_img,
@@ -231,13 +241,12 @@ def ask_news( with_img=True ):
 
         # using OpenAI
         if cnfg.interface == "openai":
-            completion  = cmplt.complete( pr )
+            completion  = cmplt.do_complete( pr )
             pr          = prmpt.prune_prompt( pr ) # remove the textual version of the image from the prompt
         # using HuggingFace
         else:
             image       = prmpt.image_pil( n ) if with_img else None
-            completion  = cmplt.complete( pr, image=image )
-            pr          = prmpt.prune_prompt( pr ) # remove the textual version of the image from the prompt
+            completion  = cmplt.do_complete( pr, image=image )
 
         res             = check_reply( completion )
         scores[ n ]     = res
@@ -275,7 +284,7 @@ def do_exec():
             print( f"ERROR: experiment '{cnfg.experiment}' not implemented" )
             return None
 
-    save_res.write_all( fstream, pr, compl, res, names, exec_csv, exec_pkl )
+    save_res.write_all( fstream, pr, compl, res, names, exec_csv, exec_pkl, mode=cnfg.mode )
     fstream.close()
     return True
 

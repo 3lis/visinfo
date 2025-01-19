@@ -24,12 +24,10 @@ cnfg                    = None                  # parameter obj assigned by main
 # ===================================================================================================================
 #
 #   - set_openai
+#
+#   - set_hf_llava_next
+#   - set_hf_chameleon
 #   - set_hf
-#
-#   - complete_openai
-#   - complete_hf
-#
-#   - complete
 #
 # ===================================================================================================================
 
@@ -44,19 +42,13 @@ def set_openai():
     return client
 
 
-def set_hf():
+def set_hf_llava_next():
     """
-    Parse the hugginface key and return the client
-        NOTE: should be the first function to call before all others that use hugginface models
-        NOTE: the client has two items: the model and the prompt processor
+    Return the LlavaNext client
     """
     global  torch
     from    transformers    import LlavaNextForConditionalGeneration, LlavaNextProcessor
-    from    huggingface_hub import login
     import  torch
-
-    key             = open( hf_file, 'r' ).read().rstrip()
-    login( token=key )
 
     model           = LlavaNextForConditionalGeneration.from_pretrained(
             cnfg.model,
@@ -68,14 +60,60 @@ def set_hf():
     return client
 
 
+def set_hf_chameleon():
+    """
+    Return the Chameleon client
+    """
+    global  torch
+    from    transformers    import ChameleonForConditionalGeneration, ChameleonProcessor
+    import  torch
+
+    model           = ChameleonForConditionalGeneration.from_pretrained(
+            cnfg.model,
+            torch_dtype=torch.float16,
+            device_map="auto"
+            )
+    processor       = ChameleonProcessor.from_pretrained( cnfg.model )
+    client          = { "model": model, "processor": processor }
+    return client
+
+
+def set_hf():
+    """
+    Parse the hugginface key and return the client
+        NOTE: should be the first function to call before all others that use hugginface models
+        NOTE: the client has two items: the model and the prompt processor
+    """
+    from    huggingface_hub import login
+
+    key             = open( hf_file, 'r' ).read().rstrip()
+    login( token=key )
+
+    if "llava-v1.6" in cnfg.model:
+        return set_hf_llava_next()
+    if "chameleon" in cnfg.model:
+        return set_hf_chameleon()
+
+    return None
+
+
+# ===================================================================================================================
+#
+#   - complete_openai
+#   - complete_hf
+#
+#   - do_complete
+#
+# ===================================================================================================================
+
 def complete_openai( prompt ):
     """
     Feed a prompt to an OpenAI model and get the list of completions returned.
     This function works for both models with "straight" completion, and models with chat completion.
 
     params:
-        prompt      [str] or [list] the prompt for completion models,
-                    or the messages for chat completion models
+        prompt      [str] or [list] the prompt for completion-mode models,
+                    or the messages for chat-mode models
 
     return:         [list] with completions [str]
     """
@@ -86,8 +124,8 @@ def complete_openai( prompt ):
         client  = set_openai()
     user    = os.getlogin() + '@' + platform.node()
 
-    if cnfg.mode == "complete":
-        assert isinstance( prompt, str ), "ERROR: for complete models the prompt should be a string"
+    if cnfg.mode == "cmpl":
+        assert isinstance( prompt, str ), "ERROR: for completion-mode models, the prompt should be a string"
         res     = client.completions.create(
             model                   = cnfg.model,
             prompt                  = prompt,
@@ -101,18 +139,19 @@ def complete_openai( prompt ):
         return [ t.text for t in res.choices ]
 
     if cnfg.mode == "chat":
-        assert isinstance( prompt, list ), "ERROR: for chat complete models the prompt should be a list"
+        assert isinstance( prompt, list ), "ERROR: for chat-mode models, the prompt should be a list"
         # try to avoid rate limits by catching openai.error.RateLimitError exception and just sleeping for a while
         # and then repeating the same completion.
         # NOTE: for gpt-4o stop=None raises Error code: 400! do not use it
         res     = client.chat.completions.create(
-        model                   = cnfg.model,
-        messages                = prompt,
-        max_tokens              = cnfg.max_tokens,
-        n                       = cnfg.n_returns,
-        top_p                   = cnfg.top_p,
-        temperature             = cnfg.temperature,
-        user                    = user)
+            model                   = cnfg.model,
+            messages                = prompt,
+            max_tokens              = cnfg.max_tokens,
+            n                       = cnfg.n_returns,
+            top_p                   = cnfg.top_p,
+            temperature             = cnfg.temperature,
+            user                    = user
+        )
         return [ t.message.content for t in res.choices ]
 
     return None
@@ -128,8 +167,8 @@ def complete_hf( prompt, image ):
         As a temporary workaround, if no image is requested, a blank image of the same size is loaded.
 
     params:
-        prompt      [str] or [list] the prompt for completion models,
-                    or the messages for chat completion models
+        prompt      [str] or [list] the prompt for completion-mode models,
+                    or the messages for chat-mode models
         image       [PIL.JpegImagePlugin.JpegImageFile] or None in case of no image
 
     return:         [list] with completions [str]
@@ -140,33 +179,31 @@ def complete_hf( prompt, image ):
     if client is None:              # check if hf has already a client, otherwise set it
         client  = set_hf()
 
-    if cnfg.mode == "complete":
-        print( "WARNING: complete_hf() not yet implemented for complete-mode models" )
-        sys.exit()
-
-    assert isinstance( prompt, list ), "ERROR: for chat complete models the prompt should be a list"
-
     model       = client[ "model" ]
     processor   = client[ "processor" ]
-    text        = processor.apply_chat_template( prompt, add_generation_prompt=True )
+
+    if cnfg.mode == "cmpl":
+        assert isinstance( prompt, str ), "ERROR: for completion-mode models, the prompt should be a string"
+        if "chameleon" in cnfg.model:
+            text        = prompt    if image is None    else prompt + "<image>"
+
+    if cnfg.mode == "chat":
+        assert isinstance( prompt, list ), "ERROR: for chat-mode models, the prompt should be a list"
+        text        = processor.apply_chat_template( prompt, add_generation_prompt=True )
 
     # dummy image as workaround for llava-next bug
-    if image is None:
-        image   = Image.new( mode='L', size=llava_next_res, color="black" )
-    else:
-        image   = image.resize( llava_next_res )
+    if "llava-v1.6" in cnfg.model:
+        if image is None:
+            image   = Image.new( mode='L', size=llava_next_res, color="black" )
+        else:
+            image   = image.resize( llava_next_res )
 
     inputs      = processor(
             images          = image,
             text            = text,
             return_tensors  = "pt"
-        ).to( model.device, torch.float16 )
+    ).to( model.device, torch.float16 )
 
-    # to suppress annoying print
-    model.generation_config.pad_token_id = model.generation_config.eos_token_id
-
-    # NOTE: for the list of arguments see the general documentation for Generation
-    # https://huggingface.co/docs/transformers/v4.35.2/en/main_classes/text_generation
     out         = model.generate(
             **inputs,
             max_new_tokens          = cnfg.max_tokens,
@@ -174,15 +211,21 @@ def complete_hf( prompt, image ):
             num_return_sequences    = cnfg.n_returns,
             top_p                   = cnfg.top_p,
             temperature             = cnfg.temperature,
-            # pad_token_id            = tokenizer.eos_token_id    # to suppress annoying print
-        )
+    )
     res         = processor.batch_decode( out, skip_special_tokens=True )
-    completions = [ r.split( "[/INST]" )[ -1 ].strip() for r in res ]
+
+    # NOTE that the prompt is included in the completion, there is no parameter like return_full_text in pipeline
+    # that can avoid this issue in model.generate. Therefore, here are workarounds that are model dependent.
+    # CHECK when  new models are added
+    if "llava-v1.6" in cnfg.model:
+        completions = [ r.split( "[/INST]" )[ -1 ].strip() for r in res ]
+    else:
+        completions = [ r.replace( prompt, "" ) for r in res ]
 
     return completions
 
 
-def complete( prompt, image=None ):
+def do_complete( prompt, image=None ):
     """
     Feed a prompt to any model and get the list of completions returned.
 
