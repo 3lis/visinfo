@@ -13,15 +13,16 @@ import  os
 import  sys
 import  shutil
 import  time
-import  numpy       as np
+import  numpy           as np
 
 import  load_cnfg                               # this module sets program parameters
-import  prompt      as prmpt                    # this module composes the prompts
-import  complete    as cmplt                    # this module performs LLM completions
+import  prompt          as prmpt                # this module composes the prompts
+import  complete        as cmplt                # this module performs LLM completions
+import  conversation    as conv                 # this module handles conversations with the LLM
 import  save_res                                # this module saves results
 
 # this module lists the available LLMs
-from    models      import models, models_endpoint, models_interface
+from    models          import models, models_endpoint, models_interface
 
 # execution directives
 DO_NOTHING              = False                 # for debugging
@@ -142,6 +143,7 @@ def init_cnfg():
 
     # pass global parameters to other modules
     cmplt.cnfg          = cnfg
+    conv.cnfg           = cnfg
     save_res.cnfg       = cnfg
 
 
@@ -171,91 +173,12 @@ def archive():
         shutil.copy( jfile, exec_data )
 
 
-
 # ===================================================================================================================
 #
-#   Main functions calling the LLM on news data
-#   - check_reply
-#   - ask_news
+#   Main function
 #   - do_exec
 #
 # ===================================================================================================================
-
-def check_reply( completion ):
-    """
-    Check the model answers in response to yes/no questions.
-
-    params:
-        completion  [list] of completion text
-
-    return:         [np.array] of booleans
-    """
-    nc      = len( completion )
-    res     = np.full( nc, False )
-
-    for i, c in enumerate( completion ):
-        c   = c.lower()
-        if "yes" in c:              # this check is not very robust, but okay for now...
-            res[ i ]    = True
-
-    return res
-
-
-def ask_news( with_img=True ):
-    """
-    Prepare the prompts and obtain the model completions
-
-    params:
-        with_img    [bool] whether the prompts include image and text
-
-    return:
-        [tuple] of:
-                    prompts     [list] of all prompt conversations
-                    completions [list] the list of completions
-                    scores      [list] of the yes/not answers
-    """
-    prompts         = []        # initialize the list of prompts
-    completions     = []        # initialize the list of completions
-    scores          = dict()    # initialize the yes/not replies
-    img_names       = []        # initialize the list of image names
-
-    if not len( cnfg.news_ids ):
-        # use all news in file if not specified otherwise
-        cnfg.news_ids   = prmpt.list_news()
-
-    for n in cnfg.news_ids:
-        if cnfg.VERBOSE:
-            i_mode      = "img + txt" if with_img else "only txt"
-            print( f"==========> Processing news {n} {i_mode} <==========" )
-
-        pr, name        = prmpt.format_prompt(
-                            n,
-                            cnfg.interface,
-                            mode        = cnfg.mode,
-                            pre         = cnfg.dialogs_pre,
-                            post        = cnfg.dialogs_post,
-                            with_img    = with_img,
-                            source      = cnfg.info_source,
-                            more        = cnfg.info_more,
-        )
-
-        # using OpenAI
-        if cnfg.interface == "openai":
-            completion  = cmplt.do_complete( pr )
-            pr          = prmpt.prune_prompt( pr ) # remove the textual version of the image from the prompt
-        # using HuggingFace
-        else:
-            image       = prmpt.image_pil( n ) if with_img else None
-            completion  = cmplt.do_complete( pr, image=image )
-
-        res             = check_reply( completion )
-        scores[ n ]     = res
-        prompts.append( pr )
-        completions.append( completion )
-        img_names.append( name )
-
-    return prompts, completions, scores, img_names
-
 
 def do_exec():
     """
@@ -267,14 +190,14 @@ def do_exec():
 
     match cnfg.experiment:
         case "news_noimage":
-            pr, compl, res, names           = ask_news( with_img=False )
+            pr, compl, res, names           = conv.ask_news( with_img=False )
 
         case "news_image":
-            pr, compl, res, names           = ask_news( with_img=True )
+            pr, compl, res, names           = conv.ask_news( with_img=True )
 
         case "both":
-            pr_img, com_img, res_img, n_i   = ask_news( with_img=True )
-            pr_noi, com_noi, res_noi, n_n   = ask_news( with_img=False )
+            pr_img, com_img, res_img, n_i   = conv.ask_news( with_img=True )
+            pr_noi, com_noi, res_noi, n_n   = conv.ask_news( with_img=False )
             pr                              = pr_img + pr_noi
             compl                           = com_img + com_noi
             names                           = n_i + n_n
@@ -287,7 +210,6 @@ def do_exec():
     save_res.write_all( fstream, pr, compl, res, names, exec_csv, exec_pkl, mode=cnfg.mode )
     fstream.close()
     return True
-
 
 
 # ===================================================================================================================
