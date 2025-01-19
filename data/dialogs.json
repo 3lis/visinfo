@@ -41,5 +41,14 @@
     {
         "id": "ask_share_strict",
         "content": "Based only on the available information, do you want to repost and share this news with your friends? Start your answer with YES or NO, and then explain your reasoning based solely on the content provided. Note that you have no means to verify its accuracy before deciding whether to share it."
+    },
+    {
+        "id": "reason_base",
+        "content": "Let's think step by step. First, reflect on the content of the news and whether it seems truthful, considering only the available information, as you have no further means to verify its accuracy.",
+        "content_img": "Let's think step by step. First, reflect on the content of the news and whether it seems truthful, considering only the available information, as you have no further means to verify its accuracy. Second, consider the content of the image and how it relates the news."
+    },
+    {
+        "id": "reason_share",
+        "content": "Lastly, decide whether you want to repost and share this news with your friends. Conclude your reasoning with either <YES> or <NO>."
     }
 ]

@@ -34,8 +34,14 @@ def check_reply( completion ):
 
     for i, c in enumerate( completion ):
         c   = c.lower()
-        if "yes" in c:              # this check is not very robust, but okay for now...
+
+        if "<yes>" in c:
             res[ i ]    = True
+        elif "<no>" in c:
+            res[ i ]    = False
+        else:
+            print( f"WARNING: unclear reply to YES/NO question. Considering <NO> as answer." )
+            res[ i ]    = False
 
     return res
 
