@@ -16,6 +16,7 @@ models                  = (                     # available models (first one is
         "gpt-4o-mini",
         "llava-hf/llava-v1.6-mistral-7b-hf",
         "facebook/chameleon-7b",
+        "Qwen/Qwen2-VL-2B-Instruct",
 )
 models_endpoint         = {                     # which endpoint should be used for a model
         "gpt-3.5-turbo-instruct"            : "cmpl",
@@ -27,6 +28,7 @@ models_endpoint         = {                     # which endpoint should be used 
         "gpt-4o-mini"                       : "chat",
         "llava-hf/llava-v1.6-mistral-7b-hf" : "chat",
         "facebook/chameleon-7b"             : "cmpl",
+        "Qwen/Qwen2-VL-2B-Instruct"         : "chat",
 }
 models_interface        = {                     # which interface should be used for a model
         "gpt-3.5-turbo-instruct"            : "openai",
@@ -38,4 +40,5 @@ models_interface        = {                     # which interface should be used
         "gpt-4o-mini"                       : "openai",
         "llava-hf/llava-v1.6-mistral-7b-hf" : "hf",
         "facebook/chameleon-7b"             : "hf",
+        "Qwen/Qwen2-VL-2B-Instruct"         : "hf",
 }

@@ -73,9 +73,11 @@ def ask_news( with_img=True ):
             i_mode      = "img + txt" if with_img else "only txt"
             print( f"==========> Processing news {n} {i_mode} <==========" )
 
+        interface       = "qwen"    if "Qwen" in cnfg.model     else cnfg.interface
+        
         pr, name        = prmpt.format_prompt(
                             n,
-                            cnfg.interface,
+                            interface,
                             mode        = cnfg.mode,
                             pre         = cnfg.dialogs_pre,
                             post        = cnfg.dialogs_post,

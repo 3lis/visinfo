@@ -33,6 +33,7 @@ class Config( object ):
     model_id                [int] index in the list of possible models (overwritten by MODEL)
     n_returns               [int] number of return sequences (overwritten by NRETURNS)
     max_tokens              [int] maximum number of tokens (overwritten by MAXTOKENS)
+    repetition_penalty      [float] penality for text repetitions in completion
     top_p                   [int] probability mass of tokens generated in completion (default=1)
     temperature             [float] sampling temperature during completion (default=1.0)
     news_ids                [list] ids of news to process
@@ -83,6 +84,8 @@ class Config( object ):
             self.info_source        = False
         if not hasattr( self, 'info_more' ):
             self.info_more          = False
+        if not hasattr( self, 'repetition_penalty' ):
+            self.repetition_penalty = 1.1
 
 
     def __str__( self ):

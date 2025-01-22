@@ -243,7 +243,7 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
 
     params:
         news        [str] id of the news
-        interface   [str] "openai" or "hf"
+        interface   [str] "openai" or "hf" or "qwen"
         mode        [str] "cmpl" or "chat"
         pre         [str] or [list of str] optional ids of text before the news content
         post        [str] or [list of str] optional ids of text after the news content
@@ -290,7 +290,31 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
                 "content":  [ { "type": "text", "text": full_text } ]
             } ]
 
-    # HuggingFace with or without image (the image is handled in complete.py)
+    elif interface == "qwen":
+
+        # Qwen with image included as string in the prompt
+        if with_img:
+            image               = image_b64( fimage )
+            img_content         = {
+                    "type":         "image",
+                    "image" :   f"data:image/jpeg;base64,{image}",
+                }
+            prompt      = [ {
+                "role":     "user",
+                "content":  [
+                    { "type": "text", "text": full_text },
+                    img_content
+                ]
+            } ]
+
+        # Qwen without image
+        else:
+            prompt      = [ {
+                "role":     "user",
+                "content":  [ { "type": "text", "text": full_text } ]
+            } ]
+
+    # HuggingFace (excluding Qwen) with or without image (the image is handled in complete.py)
     elif interface == "hf":
 
         # NOTE currently llava-next has a bug that does not allow inference without an image

@@ -111,14 +111,15 @@ def init_cnfg():
         cnfg.load_from_file( file_kwargs )                  # read the configuration file
 
     else:                                                   # default configuration
-        cnfg.model_id       = 0                             # use the defaul model
-        cnfg.n_returns      = 1                             # just one response
-        cnfg.max_tokens     = 50                            # afew tokens
-        cnfg.top_p          = 1                             # set a reasonable default
-        cnfg.temperature    = 0.3                           # set a reasonable default
-        cnfg.dialogs_pre    = ""                            # set a reasonable default
-        cnfg.dialogs_post   = ""                            # set a reasonable default
-        cnfg.news_ids       = []                            # set a reasonable default
+        cnfg.model_id           = 0                         # use the defaul model
+        cnfg.n_returns          = 1                         # just one response
+        cnfg.max_tokens         = 50                        # afew tokens
+        cnfg.repetition_penalty = 1.1                       # value found with little experimentation
+        cnfg.top_p              = 1                         # set a reasonable default
+        cnfg.temperature        = 0.3                       # set a reasonable default
+        cnfg.dialogs_pre        = ""                        # set a reasonable default
+        cnfg.dialogs_post       = ""                        # set a reasonable default
+        cnfg.news_ids           = []                        # set a reasonable default
 
     if not hasattr( cnfg, 'experiment' ):
         cnfg.experiment         = None                      # whether experiment uses images or not
@@ -135,7 +136,7 @@ def init_cnfg():
         cnfg.mode           = models_endpoint[ cnfg.model ]
         cnfg.interface      = models_interface[ cnfg.model ]
 
-    now_time        = time.strftime( frmt_response )    # string used for composing file names of results
+    now_time        = time.strftime( frmt_response )        # string used for composing file names of results
 
     # export information from config
     if hasattr( cnfg, 'f_dialog' ):     prmpt.f_dialog  = cnfg.f_dialog
