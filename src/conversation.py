@@ -6,6 +6,7 @@
 #####################################################################################################################
 """
 
+import  sys
 import  numpy           as np
 
 import  prompt          as prmpt                # this module composes the prompts
@@ -27,21 +28,115 @@ def check_reply( completion ):
     params:
         completion  [list] of completion text
 
-    return:         [np.array] of booleans
+    return:         three [np.array] of booleans for yes/no/unk replies
     """
-    nc      = len( completion )
-    res     = np.full( nc, False )
+    no_patterns = [
+        "<decision>no",
+        "would recommend not reposting",
+        "would recommend not sharing",
+        "would be advisable to not repost",
+        "would be advisable to not share",
+        "i would not repost",
+        "i would not post",
+        "i would not share",
+        "i would not recommend reposting",
+        "i would not recommend sharing",
+        "i should not repost",
+        "i should not share",
+        "i would not feel comfortable sharing",
+        "i do not want to repost",
+        "i do not want to share",
+        "i would not want to repost",
+        "i would not want to share",
+    ]
+    yes_patterns    = [
+        "<decision>yes",
+        "i want to repost",
+        "i want to share",
+        "i would recommend doing so",
+        "i would decide to repost",
+        "i would decide to share",
+        "i would want to repost",
+        "i would want to share",
+        "i would feel inclined to repost",
+        "i would feel inclined to share",
+        "i would likely share",
+        "i would like to repost",
+        "i would like to share",
+        "i might consider sharing it",
+        "it would be reasonable to share",
+    ]
+
+    values      = 'yes', 'no', 'unk'
+    nc          = len( completion )
+    res         = dict()
+    for v in values:
+        res[ v ]    = np.full( nc, False )
 
     for i, c in enumerate( completion ):
-        c   = c.lower()
+        c       = c.lower()
+        found   = False
 
+        # first, check if reply contains <yes>/<no>
         if "<yes>" in c:
-            res[ i ]    = True
+            res[ "yes" ][ i ]   = True
+            found               = True
         elif "<no>" in c:
-            res[ i ]    = False
+            res[ "no" ][ i ]    = True
+            found               = True
+
+        # second, check if reply starts with yes/no
+        elif c[ :3 ] == "yes":
+            res[ "yes" ][ i ]   = True
+            found               = True
+        elif c[ :2 ] == "no":
+            res[ "no" ][ i ]    = True
+            found               = True
+
+        # third, check if reply contains positive/negative patterns
         else:
-            print( f"WARNING: unclear reply to YES/NO question. Considering <NO> as answer." )
-            res[ i ]    = False
+            found_yes       = any( p in c for p in yes_patterns )
+            found_no        = any( p in c for p in no_patterns )
+
+            if found_yes and found_no:
+                print( f"WARNING: contradicting reply to YES/NO question. Considering <UNK> as answer." )
+                res[ "unk" ][ i ]       = True
+                if cnfg.DEBUG:
+                    sys.exit()
+
+            if found_yes:
+                res[ "yes" ][ i ]       = True
+                found                   = True
+            elif found_no:
+                res[ "no" ][ i ]        = True
+                found                   = True
+
+        # if not found:
+        #     for p in yes_patterns:
+        #         if p in c:
+        #             res[ "yes" ][ i ]   = True
+        #             found               = True
+        #             break
+        #         else:
+        #             if cnfg.DEBUG:
+        #                 print( f"not found: {p}\n in: {c}" )
+        #
+        # if not found:
+        #     for p in no_patterns:
+        #         if p in c:
+        #             res[ "no" ][ i ]    = True
+        #             found               = True
+        #             break
+        #         else:
+        #             if cnfg.DEBUG:
+        #                 print( f"not found: {p}\n in: {c}" )
+
+        # otherwise, default to unknown
+        if not found:
+            print( f"WARNING: unclear reply to YES/NO question. Considering <UNK> as answer." )
+            res[ "unk" ][ i ]    = True
+            if cnfg.DEBUG:
+                sys.exit()
 
     return res
 
@@ -74,7 +169,7 @@ def ask_news( with_img=True ):
             print( f"==========> Processing news {n} {i_mode} <==========" )
 
         interface       = "qwen"    if "Qwen" in cnfg.model     else cnfg.interface
-        
+
         pr, name        = prmpt.format_prompt(
                             n,
                             interface,

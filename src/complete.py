@@ -16,6 +16,9 @@ hf_file                 = "../data/.hf.txt"     # file with the current huggingf
 
 llava_next_res          = ( 672, 672 )          # image resolution accepted by LLaVA-NeXT or (336, 672) [HxW]
 llava_next_n_max        = 50                    # maximum number of returns for LLaVA-NeXT (due to GPU memory)
+qwen2_vl_n_max          = 2                     # maximum number of returns for Qwen2-VL-2B (due to GPU memory)
+qwen2_vl_min_res        = 224*224               # minimum image resolution for Qwen2-VL-2B
+qwen2_vl_max_res        = 672*672               # maximum image resolution for Qwen2-VL-2B
 
 client                  = None                  # the language model client object
 cnfg                    = None                  # parameter obj assigned by main_exec.py
@@ -59,9 +62,9 @@ def set_hf_chameleon():
 
     model           = ChameleonForConditionalGeneration.from_pretrained(
             cnfg.model,
-            torch_dtype=torch.float16,
+            torch_dtype         = torch.float16,
             repetition_penalty  = cnfg.repetition_penalty,
-            device_map="auto"
+            device_map          = "auto"
             )
     processor       = ChameleonProcessor.from_pretrained( cnfg.model )
     client          = { "model": model, "processor": processor }
@@ -84,7 +87,11 @@ def set_hf_qwen():
             # attn_implementation="flash_attention_2",    # should install FlashAttention-2 and see if works
             device_map="auto"
             )
-    processor       = AutoProcessor.from_pretrained( cnfg.model )
+    processor       = AutoProcessor.from_pretrained(
+            cnfg.model,
+            min_pixels  = qwen2_vl_min_res,
+            max_pixels  = qwen2_vl_max_res
+            )
     client          = { "model": model, "processor": processor }
     return client
 
@@ -146,7 +153,7 @@ def complete_openai( prompt ):
     return:         [list] with completions [str]
     """
     global client
-    if cnfg.DEBUG:  return [ "test_only" ]
+#   if cnfg.DEBUG:  return [ "test_only" ]
 
     if client is None:              # check if openai has already a client, otherwise set it
         client  = set_openai()
@@ -246,8 +253,11 @@ def complete_chameleon( model, processor, prompt, image ):
 
     return:         [list] with completions [str]
     """
-    text        = prompt    if image is None    else prompt + "<image>"
-    image       = image.resize( llava_next_res )
+    if image is None:
+        text        = prompt
+    else:
+        text        = prompt + "<image>"
+        image       = image.resize( llava_next_res )
 
     inputs      = processor(
             images          = image,
@@ -328,7 +338,7 @@ def complete_hf( prompt, image ):
     return:         [list] with completions [str]
     """
     global client
-    if cnfg.DEBUG:  return [ "test_only" ]
+#   if cnfg.DEBUG:  return [ "test_only" ]
 
     if client is None:              # check if hf has already a client, otherwise set it
         client  = set_hf()
@@ -365,14 +375,18 @@ def do_complete( prompt, image=None ):
             return complete_openai( prompt )
 
         case 'hf':
-            if cnfg.n_returns <= llava_next_n_max:
+            if "Qwen" in cnfg.model:
+                n_max   = qwen2_vl_n_max
+            else:
+                n_max   = llava_next_n_max
+            if cnfg.n_returns <= n_max:
                 return complete_hf( prompt, image=image )
             # to avoid problems of GPU memory, do separate reps
-            reps            = cnfg.n_returns // llava_next_n_max
-            reminder        = cnfg.n_returns % llava_next_n_max
+            reps            = cnfg.n_returns // n_max
+            reminder        = cnfg.n_returns % n_max
             saved           = cnfg.n_returns                    # make a copy of the original number of results
             completions     = []
-            cnfg.n_returns  = llava_next_n_max
+            cnfg.n_returns  = n_max
             for i in range( reps ):
                 completions += ( complete_hf( prompt, image=image ) )
             if reminder:

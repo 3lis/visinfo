@@ -25,7 +25,7 @@ import  save_res                                # this module saves results
 from    models          import models, models_endpoint, models_interface
 
 # execution directives
-DO_NOTHING              = False                 # for debugging
+DO_NOTHING              = False                 # for interactive usage
 DEBUG                   = False                 # temporary specific debugging
 
 frmt_response           = "%y-%m-%d_%H-%M-%S"   # datetime format for filenames
@@ -124,6 +124,8 @@ def init_cnfg():
     if not hasattr( cnfg, 'experiment' ):
         cnfg.experiment         = None                      # whether experiment uses images or not
 
+    cnfg.DEBUG                  = DEBUG                     # run in DEBUG mode
+
     # overwrite command line arguments
     if cnfg.MAXTOKENS is not None:      cnfg.max_tokens = cnfg.MAXTOKENS
     if cnfg.MODEL is not None:          cnfg.model_id   = cnfg.MODEL
@@ -220,9 +222,6 @@ def do_exec():
 # ===================================================================================================================
 
 if __name__ == '__main__':
-    if DEBUG:
-        sys.exit()
-
     if DO_NOTHING:
         print( "Program instructed to DO_NOTHING" )
 

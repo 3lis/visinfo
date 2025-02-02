@@ -62,40 +62,67 @@ def write_stats( fcsv, fpkl=None, results=None ):
     else:
         assert results is not None, "ERROR: no pickle file or dict of results found"
 
+    values      = 'yes', 'no', 'unk'
     csv_header  = [ "News" ]
     csv_rows    = []
 
     # stats for executions using news with AND without images
     if "with_img" in results and "no_img" in results:
-        csv_header      += [ "YES (img+txt)", "YES (txt)" ]
+        csv_header      += [ "YES+i", "NO+i", "UNK+i", "YES-i", "NO-i", "UNK-i" ]
         all_res_img     = results[ "with_img" ]
         all_res_txt     = results[ "no_img" ]
-        res_img         = []
-        res_txt         = []
+        res_img         = dict()
+        res_txt         = dict()
+        for v in values:
+            res_img[ v ]    = []
+            res_txt[ v ]    = []
         k_items         = sorted( list( all_res_img.keys() ) )
         for k  in k_items:
             ri          = all_res_img[ k ]
             rt          = all_res_txt[ k ]
             n           = len( ri )        # equal to the num of completions
             assert n > 0, "ERROR: no completions for news {k} in write_stats()"
-            vi          = ri.sum() / n
-            vt          = rt.sum() / n
-            res_img.append( vi )
-            res_txt.append( vt )
-            csv_rows.append( [ k, f"{vi:.3f}", f"{vt:.3f}" ] )
+            yes_i       = ri[ "yes" ].mean()
+            no_i        = ri[ "no" ].mean()
+            unk_i       = ri[ "unk" ].mean()
+            yes_t       = rt[ "yes" ].mean()
+            no_t        = rt[ "no" ].mean()
+            unk_t       = rt[ "unk" ].mean()
+            res_img[ "yes" ].append( yes_i )
+            res_img[ "no" ].append( no_i )
+            res_img[ "unk" ].append( unk_i )
+            res_txt[ "yes" ].append( yes_t )
+            res_txt[ "no" ].append( no_t )
+            res_txt[ "unk" ].append( unk_t )
+            csv_rows.append( [
+                    k,
+                    f"{yes_i:.3f}",
+                    f"{no_i:.3f}",
+                    f"{unk_i:.3f}",
+                    f"{yes_t:.3f}",
+                    f"{no_t:.3f}",
+                    f"{unk_t:.3f}",
+            ] )
 
-        res_img     = np.array( res_img )
-        res_txt     = np.array( res_txt )
-        mean_img    = res_img.mean()
-        mean_txt    = res_txt.mean()
-        std_img     = res_img.std()
-        std_txt     = res_txt.std()
-        csv_rows.append( [  "mean [std]",
-                            f"{mean_img:.3f} [{std_img:.3f}]",
-                            f"{mean_txt:.3f} [{std_txt:.3f}]"
+        for v in values:
+            res_img[ v ]    = np.array( res_img[ v ] )
+            res_txt[ v ]    = np.array( res_txt[ v ] )
+        m_yes_i         = res_img[ "yes" ].mean()
+        m_no_i          = res_img[ "no" ].mean()
+        m_unk_i         = res_img[ "unk" ].mean()
+        m_yes_t         = res_txt[ "yes" ].mean()
+        m_no_t          = res_txt[ "no" ].mean()
+        m_unk_t         = res_txt[ "unk" ].mean()
+        csv_rows.append( [ "mean",
+                    f"{m_yes_i:.3f}",
+                    f"{m_no_i:.3f}",
+                    f"{m_unk_i:.3f}",
+                    f"{m_yes_t:.3f}",
+                    f"{m_no_t:.3f}",
+                    f"{m_unk_t:.3f}",
         ] )
 
-    # stats for executions using news with OR without images
+    # stats for executions using news with OR without images (only YES)
     else:
         csv_header  += [ "Fraction of YES" ]
         res         = []

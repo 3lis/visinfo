@@ -50,5 +50,13 @@
     {
         "id": "reason_share",
         "content": "Lastly, decide whether you want to repost and share this news with your friends. Conclude your reasoning with either <YES> or <NO>."
+    },
+    {
+        "id": "reason_share_delimit",
+        "content": "Lastly, decide whether you want to repost and share this news with your friends. Please, structure your answer as follows:\n###\n<your reasoning>\n###\n###<YES> or <NO>\n###"
+    },
+    {
+        "id": "reason_share_xml",
+        "content": "Lastly, decide whether you want to repost and share this news with your friends. Please, structure your answer as follows:\n<reason>your reasoning</reason>\n<decision><YES> or <NO></decision>"
     }
 ]
