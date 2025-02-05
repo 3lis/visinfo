@@ -101,8 +101,8 @@ def check_reply( completion ):
             if found_yes and found_no:
                 print( f"WARNING: contradicting reply to YES/NO question. Considering <UNK> as answer." )
                 res[ "unk" ][ i ]       = True
-                if cnfg.DEBUG:
-                    sys.exit()
+#               if cnfg.DEBUG:
+#                   sys.exit()
 
             if found_yes:
                 res[ "yes" ][ i ]       = True
@@ -135,18 +135,19 @@ def check_reply( completion ):
         if not found:
             print( f"WARNING: unclear reply to YES/NO question. Considering <UNK> as answer." )
             res[ "unk" ][ i ]    = True
-            if cnfg.DEBUG:
-                sys.exit()
+#           if cnfg.DEBUG:
+#               sys.exit()
 
     return res
 
 
-def ask_news( with_img=True ):
+def ask_news( with_img=True, demographics=None ):
     """
     Prepare the prompts and obtain the model completions
 
     params:
         with_img    [bool] whether the prompts include image and text
+        demographics [dict] demographic details, or None
 
     return:
         [tuple] of:
@@ -169,6 +170,7 @@ def ask_news( with_img=True ):
             print( f"==========> Processing news {n} {i_mode} <==========" )
 
         interface       = "qwen"    if "Qwen" in cnfg.model     else cnfg.interface
+#       interface       = cnfg.interface
 
         pr, name        = prmpt.format_prompt(
                             n,
@@ -179,6 +181,7 @@ def ask_news( with_img=True ):
                             with_img    = with_img,
                             source      = cnfg.info_source,
                             more        = cnfg.info_more,
+                            demographics= demographics,
         )
 
         # using OpenAI

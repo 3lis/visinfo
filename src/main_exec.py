@@ -26,7 +26,6 @@ from    models          import models, models_endpoint, models_interface
 
 # execution directives
 DO_NOTHING              = False                 # for interactive usage
-DEBUG                   = False                 # temporary specific debugging
 
 frmt_response           = "%y-%m-%d_%H-%M-%S"   # datetime format for filenames
 now_time                = None                  # the global current datetime
@@ -124,8 +123,6 @@ def init_cnfg():
     if not hasattr( cnfg, 'experiment' ):
         cnfg.experiment         = None                      # whether experiment uses images or not
 
-    cnfg.DEBUG                  = DEBUG                     # run in DEBUG mode
-
     # overwrite command line arguments
     if cnfg.MAXTOKENS is not None:      cnfg.max_tokens = cnfg.MAXTOKENS
     if cnfg.MODEL is not None:          cnfg.model_id   = cnfg.MODEL
@@ -142,7 +139,9 @@ def init_cnfg():
 
     # export information from config
     if hasattr( cnfg, 'f_dialog' ):     prmpt.f_dialog  = cnfg.f_dialog
+    if hasattr( cnfg, 'f_demo' ):       prmpt.f_demo    = cnfg.f_demo
     if hasattr( cnfg, 'detail' ):       prmpt.detail    = cnfg.detail
+    prmpt.DEBUG     = cnfg.DEBUG
 
     # pass global parameters to other modules
     cmplt.cnfg          = cnfg
@@ -155,7 +154,8 @@ def archive():
     Save a copy of current python source and json data files in the execution folder
     """
     jfiles  = ( "dialogs.json",
-                "news.json"
+                "news.json",
+                "demographics.json",
     )
 
     pfiles  = [ "main_exec.py",
@@ -193,14 +193,14 @@ def do_exec():
 
     match cnfg.experiment:
         case "news_noimage":
-            pr, compl, res, names           = conv.ask_news( with_img=False )
+            pr, compl, res, names           = conv.ask_news( with_img=False, demographics=cnfg.demographics )
 
         case "news_image":
-            pr, compl, res, names           = conv.ask_news( with_img=True )
+            pr, compl, res, names           = conv.ask_news( with_img=True, demographics=cnfg.demographics )
 
         case "both":
-            pr_img, com_img, res_img, n_i   = conv.ask_news( with_img=True )
-            pr_noi, com_noi, res_noi, n_n   = conv.ask_news( with_img=False )
+            pr_img, com_img, res_img, n_i   = conv.ask_news( with_img=True, demographics=cnfg.demographics )
+            pr_noi, com_noi, res_noi, n_n   = conv.ask_news( with_img=False, demographics=cnfg.demographics )
             pr                              = pr_img + pr_noi
             compl                           = com_img + com_noi
             names                           = n_i + n_n
@@ -229,5 +229,8 @@ if __name__ == '__main__':
         init_cnfg()
         init_dirs()
         if cnfg.experiment is not None:
-            archive()
+            if cnfg.DEBUG:
+                print( "Program running in DEBUG mode, not archiving" )
+            else:
+                archive()
             do_exec()

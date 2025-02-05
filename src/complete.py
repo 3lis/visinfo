@@ -14,11 +14,9 @@ from    PIL         import Image
 key_file                = "../data/.key.txt"    # file with the current OpenAI API access key
 hf_file                 = "../data/.hf.txt"     # file with the current huggingface access key
 
-llava_next_res          = ( 672, 672 )          # image resolution accepted by LLaVA-NeXT or (336, 672) [HxW]
+native_res              = ( 672, 672 )          # image resolution for LLaVA-NeXT, Qwen2-VL-7B should be multiple of 28
 llava_next_n_max        = 50                    # maximum number of returns for LLaVA-NeXT (due to GPU memory)
-qwen2_vl_n_max          = 2                     # maximum number of returns for Qwen2-VL-2B (due to GPU memory)
-qwen2_vl_min_res        = 224*224               # minimum image resolution for Qwen2-VL-2B
-qwen2_vl_max_res        = 672*672               # maximum image resolution for Qwen2-VL-2B
+qwen2_vl_n_max          = 1                     # NOTE: Qwen2-VL-7B provide inconsisten results with more than 1!!
 
 client                  = None                  # the language model client object
 cnfg                    = None                  # parameter obj assigned by main_exec.py
@@ -76,9 +74,7 @@ def set_hf_qwen():
     Return the Qwen client
     """
     global  torch
-    global  process_vision_info
     from    transformers    import Qwen2VLForConditionalGeneration, AutoProcessor
-    from    qwen_vl_utils   import process_vision_info
     import  torch
 
     model           = Qwen2VLForConditionalGeneration.from_pretrained(
@@ -87,11 +83,7 @@ def set_hf_qwen():
             # attn_implementation="flash_attention_2",    # should install FlashAttention-2 and see if works
             device_map="auto"
             )
-    processor       = AutoProcessor.from_pretrained(
-            cnfg.model,
-            min_pixels  = qwen2_vl_min_res,
-            max_pixels  = qwen2_vl_max_res
-            )
+    processor       = AutoProcessor.from_pretrained( cnfg.model )
     client          = { "model": model, "processor": processor }
     return client
 
@@ -132,9 +124,8 @@ def set_openai():
 #
 #   - complete_openai
 #   - complete_llava
-#   - complete_hf
-#   - complete_hf
-#   - complete_hf
+#   - complete_chameleon
+#   - complete_qwen
 #   - complete_hf
 #
 #   - do_complete
@@ -211,15 +202,17 @@ def complete_llava( model, processor, prompt, image ):
 
     # dummy image as workaround for llava-next bug (see comment above)
     if image is None:
-        image   = Image.new( mode='L', size=llava_next_res, color="black" )
+        image   = Image.new( mode='L', size=native_res, color="black" )
     else:
-        image   = image.resize( llava_next_res )
+        image   = image.resize( native_res )
 
     inputs      = processor(
             images          = image,
             text            = text,
             return_tensors  = "pt"
     ).to( model.device, torch.float16 )
+
+    model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
     out         = model.generate(
             **inputs,
@@ -257,7 +250,7 @@ def complete_chameleon( model, processor, prompt, image ):
         text        = prompt
     else:
         text        = prompt + "<image>"
-        image       = image.resize( llava_next_res )
+        image       = image.resize( native_res )
 
     inputs      = processor(
             images          = image,
@@ -283,7 +276,7 @@ def complete_chameleon( model, processor, prompt, image ):
     return completions
 
 
-def complete_qwen( model, processor, prompt ):
+def complete_qwen( model, processor, prompt, image ):
     """
     Feed a prompt to a Qwen model and get the list of completions returned.
 
@@ -293,16 +286,16 @@ def complete_qwen( model, processor, prompt ):
 
     return:         [list] with completions [str]
     """
+    if image is not None:
+        image   = image.resize( native_res )
     text        = processor.apply_chat_template(
                     prompt,
                     tokenize                = False,
                     add_generation_prompt   = True
     )
-    imgs, video = process_vision_info( prompt )
     inputs      = processor(
             text            = text,
-            images          = imgs,
-            videos          = video,
+            images          = image,
             padding         = True,
             return_tensors  = "pt"
     ).to( model.device, torch.float16 )
@@ -311,7 +304,7 @@ def complete_qwen( model, processor, prompt ):
             **inputs,
             max_new_tokens          = cnfg.max_tokens,
             do_sample               = True,                     # NOTE: the default is greedy!
-            num_return_sequences    = cnfg.n_returns,
+            num_return_sequences    = 1,                        # NOTE: more than 1 produces garbage!
             top_p                   = cnfg.top_p,
             temperature             = cnfg.temperature,
     )
@@ -351,7 +344,8 @@ def complete_hf( prompt, image ):
     if "chameleon" in cnfg.model:
         return complete_chameleon( model, processor, prompt, image )
     if "Qwen" in cnfg.model:
-        return complete_qwen( model, processor, prompt )
+        return complete_qwen( model, processor, prompt, image )
+#       return complete_qwen_base64( model, processor, prompt )
 
     print( f"WARNING: model '{cnfg.model}' not currently supported.")
     return None

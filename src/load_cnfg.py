@@ -18,27 +18,28 @@ class Config( object ):
 
     Command line flags:
     CONFIG                  [str] name of configuration file (without path nor extension) (DEFAULT=None)
-    DEBUG                   [str] debug mode: print prompts only, do not call LLMs
+    DEBUG                   [str] debug mode, for generic debugging in selected parts of the software
     MAXTOKENS               [int] maximum number of tokens (DEFAULT=None)
     MODEL                   [int] index in the list of possible models (DEFAULT=0)
     NRETURNS                [int] number of return sequences (DEFAULT=None)
     VERBOSE                 [bool] write additional information
 
     Configuration file parameters:
+    demographics            [dic] demographic data or None
     detail                  [str] detail parameter for OpenAI image handling: "high", "low", "auto"
     dialogs_pre             [list or str] dialog ids to instert before the news
     dialogs_post            [list or str] dialog ids to instert after the news
     f_dialog                [str] filename of json file with dialogs
     f_news                  [str] filename of json file with the news
+    info_source             [bool] add info about the source of the news
+    info_more               [bool] add more available info about the news, like number of share/followers
     model_id                [int] index in the list of possible models (overwritten by MODEL)
-    n_returns               [int] number of return sequences (overwritten by NRETURNS)
     max_tokens              [int] maximum number of tokens (overwritten by MAXTOKENS)
+    n_returns               [int] number of return sequences (overwritten by NRETURNS)
+    news_ids                [list] ids of news to process
     repetition_penalty      [float] penality for text repetitions in completion
     top_p                   [int] probability mass of tokens generated in completion (default=1)
     temperature             [float] sampling temperature during completion (default=1.0)
-    news_ids                [list] ids of news to process
-    info_source             [bool] add info about the source of the news
-    info_more               [bool] add more available info about the news, like number of share/followers
 
     """
 
@@ -86,6 +87,8 @@ class Config( object ):
             self.info_more          = False
         if not hasattr( self, 'repetition_penalty' ):
             self.repetition_penalty = 1.1
+        if not hasattr(self, 'demographics'):
+            self.demographics       = None      # Default is not including demographics
 
 
     def __str__( self ):

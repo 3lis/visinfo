@@ -80,8 +80,7 @@ def write_stats( fcsv, fpkl=None, results=None ):
         for k  in k_items:
             ri          = all_res_img[ k ]
             rt          = all_res_txt[ k ]
-            n           = len( ri )        # equal to the num of completions
-            assert n > 0, "ERROR: no completions for news {k} in write_stats()"
+            assert len( ri ) > 0, "ERROR: no completions for news {k} in write_stats()"
             yes_i       = ri[ "yes" ].mean()
             no_i        = ri[ "no" ].mean()
             unk_i       = ri[ "unk" ].mean()
@@ -124,21 +123,55 @@ def write_stats( fcsv, fpkl=None, results=None ):
 
     # stats for executions using news with OR without images (only YES)
     else:
-        csv_header  += [ "Fraction of YES" ]
-        res         = []
+        csv_header  += [ "YES", "NO", "UNK" ]
+        res         = dict()
         k_items     = sorted( list( results.keys() ) )
+        for v in values:
+            res[ v ]    = []
         for k  in k_items:
             rs      = results[ k ]
-            n       = len( rs )    # equal to the num of completions
-            assert n > 0, "ERROR: no completions for news {k} in write_stats()"
-            r       = rs.sum() / n
-            res.append( r )
-            csv_rows.append( [ k, f"{r:.3f}" ] )
+            assert len( rs ) > 0, "ERROR: no completions for news {k} in write_stats()"
+            r_yes       = rs[ "yes" ].mean()
+            r_no        = rs[ "no" ].mean()
+            r_unk       = rs[ "unk" ].mean()
+            res[ "yes" ].append( r_yes )
+            res[ "no" ].append( r_no )
+            res[ "unk" ].append( r_unk )
+            csv_rows.append( [
+                    k,
+                    f"{r_yes:.3f}",
+                    f"{r_no:.3f}",
+                    f"{r_unk:.3f}",
+            ] )
 
-        res     = np.array( res )
-        mean    = res.mean()
-        std     = res.std()
-        csv_rows.append( [ "mean [std]", f"{mean:.3f} [{std:.3f}]" ] )
+        for v in values:
+            res[ v ]    = np.array( res[ v ] )
+        m_yes   = res[ "yes" ].mean()
+        m_no    = res[ "no" ].mean()
+        m_ink   = res[ "unk" ].mean()
+        csv_rows.append( [ "mean",
+                    f"{m_yes:.3f}",
+                    f"{m_no:.3f}",
+                    f"{m_unk:.3f}",
+        ] )
+
+    # # stats for executions using news with OR without images (only YES)
+    # else:
+    #     csv_header  += [ "Fraction of YES" ]
+    #     res         = []
+    #     k_items     = sorted( list( results.keys() ) )
+    #     for k  in k_items:
+    #         rs      = results[ k ]
+    #         n       = len( rs )    # equal to the num of completions
+    #         assert n > 0, "ERROR: no completions for news {k} in write_stats()"
+    #         r       = rs.sum() / n
+    #         res.append( r )
+    #         csv_rows.append( [ k, f"{r:.3f}" ] )
+    #
+    #     res     = np.array( res )
+    #     mean    = res.mean()
+    #     std     = res.std()
+    #     csv_rows.append( [ "mean [std]", f"{mean:.3f} [{std:.3f}]" ] )
 
     with open( fcsv, mode='w', newline='' ) as f:
         w   = csv.writer( f )

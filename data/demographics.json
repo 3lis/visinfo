@@ -1,0 +1,12 @@
+{
+    "gender": ["male", "female"],
+    "race": ["black or african american", "white", "asian", "american indian", "alaska native", "hispanic", "native hawaiian", "pacific islander"],
+    "education": [
+        "some college experience but no degree", "an Associate degree in college (2-year)", "a Bachelor's degree in college (4-year)",
+        "a Doctoral degree", "a Master's degree", "a professional degree (JD, MD)", 
+        "a high school diploma", "limited educational background (less than a high school degree)"
+    ],
+    "age": ["18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65+", "less than 18"],
+    "political_affiliation": ["Liberal", "Independent", "Conservative"]
+}
+

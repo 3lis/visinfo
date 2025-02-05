@@ -18,6 +18,7 @@ shortcuts   = {
     'ask_img':              'ask_im',
     'ask_share':            'ask_sh',
     'ask_share_strict':     'ask_ss',
+    'ask_share_noexplain':  'ask_ne',
     'intro_profile':        'int_pr',
     'profile_conspirator':  'pro_co',
     'profile_moderate':     'pro_mo',
@@ -53,6 +54,7 @@ def get_info ( lines, version=2 ):
     pre             = ""
     post            = ""
     means           = "---"
+    profile         = "---"
     for i, l in enumerate( lines ):
         if "experiment" in l:
             experiment      = l.split()[ -1 ]

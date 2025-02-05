@@ -19,7 +19,9 @@ dir_json                = "../data"                 # directory with all input d
 dir_imgs                = "../imgs"                 # directory with news images
 f_dialog                = "dialogs.json"            # filename of the preliminary dialogs
 f_news                  = "news.json"               # filename of the news tests
+f_demo                  = "demographics.json"       # filename of demographic data
 detail                  = "high"                    # parameter for OpenAI image, overwritten by cnfg
+DEBUG                   = False                     # validated by main_exec
 
 
 # ===================================================================================================================
@@ -89,25 +91,29 @@ def image_b64( fname ):
     return img_str
 
 
-def get_dialog( i, with_img ):
+def get_dialog(i, with_img, demographics=None):
     """
-    Return a single dialog from the JSON dataset
+    Return a single dialog from the JSON dataset, optionally including demographic details.
 
     params:
         i           [str] ID of the dialog
         with_img    [bool] the news contains an image
+        demographics [dict] demographic details, or None
 
-    return:     [str] the dialog content
+    return:     [str] the dialog content (optionally including demographics)
     """
-    fname   = os.path.join( dir_json, f_dialog )
-    with open( fname, 'r' ) as f:
-        data    = json.load( f )
-    ids     = [ d[ 'id' ] for d in data ]
+    # print(f"DEBUG: Calling get_dialog() with i={i}, with_img={with_img}, include_demographics={include_demographics}, demographics={demographics}")
+
+    fname = os.path.join(dir_json, f_dialog)
+
+    with open(fname, 'r') as f:
+        data = json.load(f)
+    ids = [d['id'] for d in data]
 
     try:
-        idx     = ids.index( i )
+        idx = ids.index(i)
     except Exception as e:
-        print( f"ERROR: non existing dialog '{i}' in get_dialog()" )
+        print(f"ERROR: non-existing dialog '{i}' in get_dialog()")
         raise e
 
     if with_img and "content_img" in data[ idx ]:
@@ -115,6 +121,49 @@ def get_dialog( i, with_img ):
     else:
         text    = data[ idx ][ "content" ]
 
+    # # Hardcoded demographics (for testing)
+    # if include_demographics:
+        # age = "35 - 44"
+        # gender = "male"
+        # race = "White"
+        # education = "Bachelor's degree in college (4-year)"
+        # political_affiliation = "Liberal"
+
+        # # the content_dems entry and replace placeholder in profile
+        # content_dems = next(item for item in data if item['id'] == 'content_dems')['content']
+        # content_dems_filled = content_dems.format(age=age, race=race, gender=gender, education=education, political_affiliation=political_affiliation)
+
+        # # Replace the {content_dems} placeholder in the profile
+        # text = text.replace("{content_dems}", content_dems_filled)
+
+    # If demographics are included, process them
+    if demographics:
+        # Load valid demographic attributes
+        dfile = os.path.join( dir_json, f_demo )
+        with open(dfile, 'r') as f:
+            valid_demographics = json.load(f)
+
+        # Validate demographics against available options
+        valid_keys = valid_demographics.keys()
+        for key, value in demographics.items():
+            if key not in valid_keys or value not in valid_demographics[key]:
+                raise ValueError(f"Invalid demographic value: {key} = {value}")
+
+        # Retrieve and format content_dems
+        try:
+            content_dems = next(item['content'] for item in data if item['id'] == 'content_dems')
+        except StopIteration:
+            raise ValueError(f"ERROR: Missing 'content_dems' entry in {f_demo}")
+
+        # Dynamically format demographics into content_dems
+        content_dems_filled = content_dems.format(**demographics)
+
+        # Insert demographic content into the main text
+        text = text.replace("{content_dems}", content_dems_filled)
+    # otherwise, remove the {content_dems} slot
+    else:
+        text = text.replace( "{content_dems}", '' )
+    
     return text
 
 
@@ -181,7 +230,14 @@ def prune_prompt( prompt ):
     return pruned
 
 
-def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=False ):
+def compose_prompt(
+        news_id,
+        pre="",
+        post="",
+        with_img=True,
+        source=False,
+        more=False,
+        demographics=None):
     """
     Compose the text of a prompt processing one news
 
@@ -192,6 +248,7 @@ def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=
         with_img    [bool] the news contains an image
         source      [bool] add info about the source of the news
         more        [bool] add more available info about the news, like number of share/followers
+        demographics [dict] demographics data, or None
 
     return:         [str] the prompt
                     [str] image name or "" if not with_img
@@ -214,28 +271,37 @@ def compose_prompt( news_id, pre="", post="", with_img=True, source=False, more=
 
     if isinstance( pre, list ):
         for p in pre:
-            t           = get_dialog( p, with_img )
+            t           = get_dialog(p, with_img, demographics=demographics)
             full_text   += f"{t} "
 
     elif isinstance( pre, str ):
-        t           = get_dialog( pre, with_img )
+        t           = get_dialog(pre, with_img, demographics=demographics)
         full_text   += f"{t} "
 
     full_text   += f"\n{text}\n"
 
     if isinstance( post, list ):
         for p in post:
-            t           = get_dialog( p, with_img )
+            t           = get_dialog(p, with_img, demographics=demographics)
             full_text   += f"{t} "
 
     elif isinstance( post, str ):
-        t           = get_dialog( post, with_img )
+        t           = get_dialog(post, with_img, demographics=demographics)
         full_text   += f"{t} "
 
     return full_text, fimage
 
 
-def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=True, source=False, more=False ):
+def format_prompt(
+        news_id,
+        interface,
+        mode="chat",
+        pre="",
+        post="",
+        with_img=True,
+        source=False,
+        more=False,
+        demographics=None):
     """
     Format the prompt for the language model.
     For OpenAI interface, the image is passed within the prompt.
@@ -250,6 +316,7 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
         with_img    [bool] the news contains an image
         source      [bool] add info about the source of the news
         more        [bool] add more available info about the news, like number of share/followers
+        demographics [dic] demographic data, or None
 
     return:         [list] the prompt
                     [str] image name or "" if not with_img
@@ -260,8 +327,11 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
                             post        = post,
                             with_img    = with_img,
                             source      = source,
-                            more        = more
+                            more        = more,
+                            demographics=demographics,
     )
+
+    if DEBUG:   full_text = "describe the content of this image"
 
     if interface == "openai":
 
@@ -290,15 +360,10 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
                 "content":  [ { "type": "text", "text": full_text } ]
             } ]
 
+    # HuggingFace (excluding llava-next) with or without image (the image is handled in complete.py)
     elif interface == "qwen":
-
-        # Qwen with image included as string in the prompt
         if with_img:
-            image               = image_b64( fimage )
-            img_content         = {
-                    "type":         "image",
-                    "image" :   f"data:image/jpeg;base64,{image}",
-                }
+            img_content = { "type": "image" }
             prompt      = [ {
                 "role":     "user",
                 "content":  [
@@ -314,9 +379,8 @@ def format_prompt( news_id, interface, mode="chat", pre="", post="", with_img=Tr
                 "content":  [ { "type": "text", "text": full_text } ]
             } ]
 
-    # HuggingFace (excluding Qwen) with or without image (the image is handled in complete.py)
+    # HuggingFace llava-next with or without image (the image is handled in complete.py)
     elif interface == "hf":
-
         # NOTE currently llava-next has a bug that does not allow inference without an image
         # therefore "chat" mode has just one option "with image"
         if mode == "chat":
