@@ -18,3 +18,6 @@ src/show_models
 src/cfg_qw.py
 /info
 src/cfg_dm.py
+/stat
+src/test_qw.py
+src/scan_res

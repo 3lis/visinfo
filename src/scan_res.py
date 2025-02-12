@@ -63,7 +63,7 @@ def get_info ( lines, version=2 ):
         if "experiment" in l:
             experiment      = l.split()[ -1 ]
         if "model " in l:
-            model           = l.split()[ -1 ].replace( "scenario_", '' )
+            model           = l.split()[ -1 ]
         if "dialogs_pre" in l:
             dialogs_pre     = re.sub( r'[\W]+', ' ', l ).split()[ 1 : ]
         if "dialogs_post" in l:

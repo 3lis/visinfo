@@ -45,3 +45,14 @@ models_interface        = {                     # which interface should be used
         "Qwen/Qwen2-VL-2B-Instruct"         : "hf",
         "Qwen/Qwen2-VL-7B-Instruct"         : "hf",
 }
+models_short_name       = {                     # short name identifying a model, as used in statistics
+        "gpt-3.5-turbo"                     : "gpt35",
+        "gpt-4"                             : "gpt4",
+        "gpt-4-vision-preview"              : "gpt4v",
+        "gpt-4o"                            : "gpt4o",
+        "gpt-4o-mini"                       : "gpt4om",
+        "llava-hf/llava-v1.6-mistral-7b-hf" : "ll167b",
+        "facebook/chameleon-7b"             : "cham7b",
+        "Qwen/Qwen2-VL-2B-Instruct"         : "qwen2b",
+        "Qwen/Qwen2-VL-7B-Instruct"         : "qwen7b",
+}
