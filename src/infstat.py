@@ -47,12 +47,12 @@ columns             = (
     "politic",         # political affiliation categories as in the demographics file
     "news",            # the news code
     "value",           # true/false
-    "yes_wimg",        # fraction of YES answer for text+image
-    "not_wimg",        # fraction of NO answer for text+image
-    "unk_wimg",        # fraction of missing answer for text+image
-    "yes_nimg",        # fraction of YES answer for text only
-    "not_nimg",        # fraction of NO answer for text only
-    "unk_nimg",        # fraction of missing answer for text only
+    "yes_img",        # fraction of YES answer for text+image
+    "not_img",        # fraction of NO answer for text+image
+    "unk_img",        # fraction of missing answer for text+image
+    "yes_txt",        # fraction of YES answer for text only
+    "not_txt",        # fraction of NO answer for text only
+    "unk_txt",        # fraction of missing answer for text only
 )
 
 shortcuts   = {
@@ -171,12 +171,12 @@ def get_info( lines ):
     politic     = "unspec"
     news        = []
     value       = []
-    yes_wimg    = []
-    not_wimg    = []
-    unk_wimg    = []
-    yes_nimg    = []
-    not_nimg    = []
-    unk_nimg    = []
+    yes_img    = []
+    not_img    = []
+    unk_img    = []
+    yes_txt    = []
+    not_txt    = []
+    unk_txt    = []
     for i, l in enumerate( lines ):
         if "News" in l:
             break
@@ -219,12 +219,12 @@ def get_info( lines ):
             value.append( 'false' )
         else:
             value.append( 'true' )
-        yes_wimg.append( float( v[ 1 ] ) )
-        not_wimg.append( float( v[ 2 ] ) )
-        unk_wimg.append( float( v[ 3 ] ) )
-        yes_nimg.append( float( v[ 4 ] ) )
-        not_nimg.append( float( v[ 5 ] ) )
-        unk_nimg.append( float( v[ 6 ] ) )
+        yes_img.append( float( v[ 1 ] ) )
+        not_img.append( float( v[ 2 ] ) )
+        unk_img.append( float( v[ 3 ] ) )
+        yes_txt.append( float( v[ 4 ] ) )
+        not_txt.append( float( v[ 5 ] ) )
+        unk_txt.append( float( v[ 6 ] ) )
         i       += 1
         if i == n:
             print( "missing end of news results" )
@@ -232,12 +232,12 @@ def get_info( lines ):
 
     news        = np.array( news )
     value       = np.array( value )
-    yes_wimg    = np.array( yes_wimg )
-    not_wimg    = np.array( not_wimg )
-    unk_wimg    = np.array( unk_wimg )
-    yes_nimg    = np.array( yes_nimg )
-    not_nimg    = np.array( not_nimg )
-    unk_nimg    = np.array( unk_nimg )
+    yes_img    = np.array( yes_img )
+    not_img    = np.array( not_img )
+    unk_img    = np.array( unk_img )
+    yes_txt    = np.array( yes_txt )
+    not_txt    = np.array( not_txt )
+    unk_txt    = np.array( unk_txt )
     predia      = np.full( news.shape, predia )
     postdia     = np.full( news.shape, postdia )
     profile     = np.full( news.shape, profile )
@@ -260,12 +260,12 @@ def get_info( lines ):
         "politic":         politic,
         "news":            news,
         "value":           value,
-        "yes_wimg":        yes_wimg,
-        "not_wimg":        not_wimg,
-        "unk_wimg":        unk_wimg,
-        "yes_nimg":        yes_nimg,
-        "not_nimg":        not_nimg,
-        "unk_nimg":        unk_nimg,
+        "yes_img":        yes_img,
+        "not_img":        not_img,
+        "unk_img":        unk_img,
+        "yes_txt":        yes_txt,
+        "not_txt":        not_txt,
+        "unk_txt":        unk_txt,
     }
 
     return data
@@ -338,7 +338,7 @@ def means( df ):
 
     return:             [tuple] means for profile, age, gender, race, edu, politic (all models), and same by models
     """
-    scores      = [ 'yes_wimg', 'yes_nimg' ]
+    scores      = [ 'yes_img', 'yes_txt' ]
 
     mm          = df.groupby( [ 'value', 'profile' ] )[ scores ].mean()
     ma          = df.groupby( [ 'value', 'age' ] )[ scores ].mean()
@@ -406,7 +406,7 @@ def do_plots( df ):
     plot.plot_models( df, groups=[ "value", "profile" ], fname=fname )
     plot.plot_models( df, groups=[ "value", "predia" ], fname=fname )
     plot.plot_models( df, groups=[ "value", "postdia" ], fname=fname )
-    unk = [ "unk_wimg", "unk_nimg" ]
+    unk = [ "unk_img", "unk_txt" ]
     plot.plot_models( df, groups=[ "value", "predia" ], values=unk, fname=fname+"_unk" )
     plot.plot_models( df, groups=[ "value", "postdia" ], values=unk, fname=fname+"_unk" )
 
@@ -472,7 +472,7 @@ def do_stat( df ):
     """
     Do basic statistics and write it on file
     """
-    scores      = [ 'yes_wimg', 'yes_nimg' ]
+    scores      = [ 'yes_img', 'yes_txt' ]
     models      = list( df[ "model" ].unique() )
     fname       = os.path.join( dir_stat, f_stat )
     f           = open( fname, 'w' )

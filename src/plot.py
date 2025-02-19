@@ -51,7 +51,7 @@ char_len    = 0.009                                     # typical length of a ch
 
 
 
-def plot_values( df, groups=["value","age"], values=["yes_wimg", "yes_nimg"], fname="plot", suptitle='' ):
+def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fname="plot", suptitle='' ):
     """
     Generate one plot of the specified values, for a specified group of independent variables
 
@@ -135,7 +135,7 @@ def plot_values( df, groups=["value","age"], values=["yes_wimg", "yes_nimg"], fn
     pyplot.clf()
 
 
-def plot_models( df, groups=["value","age"], values=["yes_wimg", "yes_nimg"], fname="pl" ):
+def plot_models( df, groups=["value","age"], values=["yes_img", "yes_txt"], fname="pl" ):
     """
     Wrapper for executing plot_values() on all models found in the dataset, together with a final
     plot with all models data
