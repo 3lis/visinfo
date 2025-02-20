@@ -51,9 +51,10 @@ char_len    = 0.009                                     # typical length of a ch
 
 
 
-def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fname="plot", suptitle='' ):
+def plot_values_no_glabel( df, groups=["value","age"], values=["yes_img", "yes_txt"], fname="plot", suptitle='' ):
     """
     Generate one plot of the specified values, for a specified group of independent variables
+    this version produces labels only in the legend box, without labels on the X axis for the main group
 
     params:
         df          [pandas.core.frame.DataFrame] the data in pandas DataFrame
@@ -99,7 +100,6 @@ def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fnam
     ng          = len( df[ groups[ 0 ] ].unique() ) * len( values )
     # compute a proper separation of bars by group
     x           = [  i + i // ng for i in range( n ) ]
-    step        = 1. / ( x[ -1 ] + 1 )
     match ng:                           # see comments in the definition of dim_colors
         case 1:
             colors      = dim_colors[ 0:4*n:4 ]
@@ -116,7 +116,10 @@ def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fnam
         m   = data.mean()
         s   = data.std() / 2.
         ax.bar( xx, m, yerr=s, color=colors[ i ], linewidth=2 )
-        ax.set_xticks( [] )
+        # ax.set_xticks( [] )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=45, ha="right")
 
     ax.set_ylabel( "YES fraction" )
     ax.set_ylim( bottom=0.0, top=1.0 )
@@ -128,6 +131,98 @@ def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fnam
     # and now make room on the right for the labels
     ax.set_position([box.x0, box.y0, box.width * ( 1 - lab_len ), box.height])
     ax.legend( handles=handles, loc="center", bbox_to_anchor=(1+lab_len, 0.5), labelspacing=labelspacing )
+
+    fname       = fname + extension
+    pyplot.suptitle( suptitle, x=0.4 )
+    pyplot.savefig( fname, bbox_inches="tight", pad_inches=0 )
+    pyplot.close()
+    pyplot.clf()
+
+
+
+def plot_values( df, groups=["value","age"], values=["yes_img", "yes_txt"], fname="plot", suptitle='', xlabels=None ):
+    """
+    Generate one plot of the specified values, for a specified group of independent variables
+    in the list of groups, the last is used as main group, which components in the dataset are used as group label
+    the first group shouls be the lowest loob, in combination with values
+    WARNING: never tested for more than two groups...
+
+    params:
+        df          [pandas.core.frame.DataFrame] the data in pandas DataFrame
+        groups      [list] columns of independent variables
+        values      [list] the numerical values to be plot
+        fname       [str] name of the output file
+        suptitle    [str] plot title
+        xlabels     [list] labels for the X axis, is None the components of the last group are assumed
+    """
+
+    columns = df.columns
+    y       = []                        # list of all vectors to plot
+    labels  = []                        # labels for all combinations of independent variables
+    cat     = dict()                    # all categorical entries found for independent variables
+    comb    = dict()                    # vectors for all combinations of independent variables
+    for g in groups:                    # gather the categorical entries for independent variables
+        assert g in columns, f"there is no column named {g}"
+        cat[ g ]    = list( df[ g ].unique() )
+
+    for g in groups:                    # collect all vectors for combinations of independent variables
+        if not len( comb ):
+            first           = True
+        else:
+            first           = False
+            new_comb        = dict()
+        for c in cat[ g ]:
+            if first:
+                comb[ c ]   = df[ df[ g ] == c ]
+            else:
+                for prev in comb.keys():
+                    dframe  = comb[ prev ]
+                    new     = prev + '-' + c
+                    new_comb[ new ] = dframe[ dframe[ g ] == c ]
+        if not first:
+            comb            = new_comb
+
+    for c in comb.keys():               # assign vectors to y
+        dframe  = comb[ c ]
+        for v in values:
+            y.append( dframe [ v ] )
+
+    for c in cat[ groups[ 0 ] ]:        # assign key combinations of group 0 and values to labels
+        for v in values:
+            labels.append( f"{v} for {c}" )
+
+    if xlabels is None:                 # if no xlabels is specified, use the names found in the last group
+        xlabels = cat[ groups[ -1 ] ]
+
+    n           = len( y )              # total numer of bars
+    # number of bars for each component of the main group
+    ng          = len( cat[ groups[ 0 ] ] ) * len( values )
+    # compute a proper separation of bars by group
+    x           = [  i + i // ng for i in range( n ) ]
+    xl          = x[ (ng//2)::ng ]      # X positions for the main group labels
+    colors      = dim_colors[ ::4 ]     # use larger variation of colors
+    pyplot.rcParams.update( { "font.size": 14 } )
+    handles     = [ Patch( facecolor=c, label=l ) for c,l in zip( colors, labels ) ]
+    fig, ax     = pyplot.subplots( figsize=figsize )
+
+    for i, ( xx, data ) in enumerate( zip( x, y ) ):
+        m   = data.mean()
+        s   = data.std() / 2.
+        # bar with means as heigth, and a segment for standard deviation
+        ax.bar( xx, m, yerr=s, color=colors[ i % ng ], linewidth=2 )
+
+    ax.set_xticks( xl, labels=xlabels, fontsize=15 )
+    ax.set_ylabel( "YES fraction" )
+    ax.set_ylim( bottom=0.0, top=1.0 )
+
+    # compute an estimate of the max occupancy of labels in the plot
+    lab_len     = char_len * max( [ len( l ) for l in labels ] )
+    # compute the current geometry of the plotting box
+    box = ax.get_position()
+    # and now make room on the right for the labels
+    ax.set_position([box.x0, box.y0, box.width * ( 1 - lab_len ), box.height])
+    ax.legend( handles=handles, loc="center", bbox_to_anchor=(1+lab_len, 0.5), labelspacing=labelspacing )
+
     fname       = fname + extension
     pyplot.suptitle( suptitle, x=0.4 )
     pyplot.savefig( fname, bbox_inches="tight", pad_inches=0 )

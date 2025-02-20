@@ -36,23 +36,23 @@ f_stat              = "stat.txt"                # filename of output statistics
 f_plot              = "pl"                      # filename prefix of output plots
 frmt_statdir        = "%y-%m-%d-%H-%M"          # datetime format for output directory
 columns             = (
-    "predia",          # the titles of preliminary dialogs
-    "postdia",         # the titles of final part of the dialogs
-    "profile",         # the profile induced to the model
-    "model",           # the model used
-    "gender",          # F/M
-    "race",            # race categories as in the demographics file
-    "edu",             # education categories as in the demographics file
-    "age",             # age categories as in the demographics file
-    "politic",         # political affiliation categories as in the demographics file
-    "news",            # the news code
-    "value",           # true/false
-    "yes_img",        # fraction of YES answer for text+image
-    "not_img",        # fraction of NO answer for text+image
-    "unk_img",        # fraction of missing answer for text+image
-    "yes_txt",        # fraction of YES answer for text only
-    "not_txt",        # fraction of NO answer for text only
-    "unk_txt",        # fraction of missing answer for text only
+    "predia",           # the titles of preliminary dialogs
+    "postdia",          # the titles of final part of the dialogs
+    "profile",          # the profile induced to the model
+    "model",            # the model used
+    "gender",           # F/M
+    "race",             # race categories as in the demographics file
+    "edu",              # education categories as in the demographics file
+    "age",              # age categories as in the demographics file
+    "politic",          # political affiliation categories as in the demographics file
+    "news",             # the news code
+    "value",            # true/false
+    "yes_img",          # fraction of YES answer for text+image
+    "not_img",          # fraction of NO answer for text+image
+    "unk_img",          # fraction of missing answer for text+image
+    "yes_txt",          # fraction of YES answer for text only
+    "not_txt",          # fraction of NO answer for text only
+    "unk_txt",          # fraction of missing answer for text only
 )
 
 shortcuts   = {
@@ -171,12 +171,12 @@ def get_info( lines ):
     politic     = "unspec"
     news        = []
     value       = []
-    yes_img    = []
-    not_img    = []
-    unk_img    = []
-    yes_txt    = []
-    not_txt    = []
-    unk_txt    = []
+    yes_img     = []
+    not_img     = []
+    unk_img     = []
+    yes_txt     = []
+    not_txt     = []
+    unk_txt     = []
     for i, l in enumerate( lines ):
         if "News" in l:
             break
@@ -248,7 +248,7 @@ def get_info( lines ):
     age         = np.full( news.shape, age )
     politic     = np.full( news.shape, politic )
 
-    data            = {
+    data        = {
         "predia":          predia,
         "postdia":         postdia,
         "profile":         profile,
